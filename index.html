@@ -370,10 +370,16 @@ const API_BASE = 'https://bizflow-api-v0sd.onrender.com';
 // tint/sage are derived light-wash colors used for active states and
 // background gradients throughout the page.
 const THEME_PALETTES = {
-  forest:   { primary: '#1F5F45', dark: '#153F2F', accent: '#DE9530', tint: '#E7F0EA', sage: '#E3ECE4' },
-  midnight: { primary: '#1E2A5E', dark: '#141C42', accent: '#E8B74D', tint: '#E6E9F5', sage: '#DDE1F0' },
-  rose:     { primary: '#7A2E44', dark: '#551F2F', accent: '#D9A441', tint: '#F3E5EA', sage: '#EEDDE3' },
-  ocean:    { primary: '#14607A', dark: '#0D4356', accent: '#E8935B', tint: '#E1EEF2', sage: '#D8E8ED' },
+  forest:     { primary: '#1F5F45', dark: '#153F2F', accent: '#DE9530', tint: '#E7F0EA', sage: '#E3ECE4' },
+  midnight:   { primary: '#1E2A5E', dark: '#141C42', accent: '#E8B74D', tint: '#E6E9F5', sage: '#DDE1F0' },
+  rose:       { primary: '#7A2E44', dark: '#551F2F', accent: '#D9A441', tint: '#F3E5EA', sage: '#EEDDE3' },
+  ocean:      { primary: '#14607A', dark: '#0D4356', accent: '#E8935B', tint: '#E1EEF2', sage: '#D8E8ED' },
+  plum:       { primary: '#5B2C6F', dark: '#3D1D4C', accent: '#D9A6E0', tint: '#F0E4F5', sage: '#E6D9ED' },
+  amber:      { primary: '#92600A', dark: '#5F3D00', accent: '#F0C24D', tint: '#FBF1D8', sage: '#F2E3B8' },
+  slate:      { primary: '#3D4C5C', dark: '#29343E', accent: '#7FA8C9', tint: '#E7ECEF', sage: '#DBE3E8' },
+  terracotta: { primary: '#A24A2C', dark: '#6E3019', accent: '#E8A165', tint: '#F6E7DD', sage: '#EEDACB' },
+  sage:       { primary: '#63765F', dark: '#45543F', accent: '#C9A66B', tint: '#E9EDE6', sage: '#DBE3D6' },
+  noir:       { primary: '#1F1F1F', dark: '#050505', accent: '#C9A961', tint: '#E9E9E9', sage: '#D6D6D6' },
 };
 function applyTheme(themeKey){
   const t = THEME_PALETTES[themeKey] || THEME_PALETTES.forest;
