@@ -360,7 +360,19 @@
 
 <script>
 const API_BASE = 'https://bizflow-api-v0sd.onrender.com';
-const BUSINESS_ID = 2; // this storefront belongs to BizFlow business #2
+
+// Which merchant's store this is comes from the link itself, e.g.
+// yourstore.onrender.com/?business=2 — NOT a fixed number in the code.
+// That's what lets one storefront file work for every BizFlow merchant.
+const BUSINESS_ID = new URLSearchParams(window.location.search).get('business');
+
+if(!BUSINESS_ID){
+  document.body.innerHTML = `<div style="max-width:420px; margin:80px auto; text-align:center; font-family:sans-serif; padding:0 20px;">
+    <h2 style="font-family:'Space Grotesk',sans-serif;">No store selected</h2>
+    <p style="color:#5C6960;">This link is missing a store ID. Ask the seller for their storefront link.</p>
+  </div>`;
+  throw new Error('No business ID in URL — stopping storefront script.');
+}
 
 let ALL_PRODUCTS = [];
 let cart = {}; // productId -> { product, qty }
@@ -389,6 +401,15 @@ function productSVG(p){
     <rect x="22" y="30" width="56" height="56" rx="12" fill="url(#g-${p.id})"/>
     <ellipse cx="50" cy="34" rx="22" ry="5" fill="#00000018"/>
   </svg>`;
+}
+
+// Shows the merchant's real uploaded photo when one exists; falls back to
+// the generated placeholder icon for products that don't have one yet.
+function productVisual(p){
+  if(p.imageUrl){
+    return `<img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`;
+  }
+  return productSVG(p);
 }
 
 function showStatus(msg, isError){
@@ -450,7 +471,7 @@ function renderGrid(){
     <div class="product-card ${p.inStock ? '' : 'oos'}" onclick="${p.inStock ? `openProduct(${p.id})` : ''}">
       <div class="product-thumb" style="background:linear-gradient(160deg, ${swatchFor(p.id)[0]}33, ${swatchFor(p.id)[1]}22);">
         ${p.inStock ? '' : '<div class="oos-tag">OUT OF STOCK</div>'}
-        ${productSVG(p)}
+        ${productVisual(p)}
         ${p.inStock ? `<button class="quick-add" onclick="event.stopPropagation(); quickAdd(${p.id})">+</button>` : ''}
       </div>
       <div class="product-info">
@@ -467,7 +488,7 @@ function openProduct(id){
   modalQty = 1;
   const [c1, c2] = swatchFor(activeProduct.id);
   document.getElementById('pm-visual').style.background = `linear-gradient(155deg, ${c1}55 0%, ${c2}33 100%)`;
-  document.getElementById('pm-visual').innerHTML = productSVG(activeProduct);
+  document.getElementById('pm-visual').innerHTML = productVisual(activeProduct);
   document.getElementById('pm-cat').textContent = activeProduct.category;
   document.getElementById('pm-title').textContent = activeProduct.name;
   document.getElementById('pm-price').textContent = money(activeProduct.price);
@@ -522,7 +543,7 @@ function renderCart(){
   }
   list.innerHTML = entries.map(i => `
     <div class="cart-item">
-      <div class="cart-thumb" style="background:linear-gradient(160deg, ${swatchFor(i.product.id)[0]}33, ${swatchFor(i.product.id)[1]}22);">${productSVG(i.product)}</div>
+      <div class="cart-thumb" style="background:linear-gradient(160deg, ${swatchFor(i.product.id)[0]}33, ${swatchFor(i.product.id)[1]}22);">${productVisual(i.product)}</div>
       <div class="cart-item-body">
         <div><div class="cart-item-name">${i.product.name}</div><div class="cart-item-cat">${i.product.category}</div></div>
         <div class="cart-item-bottom">
