@@ -45,7 +45,11 @@
   }
   .badge.bump{ transform:scale(1.35); }
 
-  .hero{ padding:52px 0 40px; }
+  .hero{ padding:52px 0 40px; position:relative; }
+  #hero-banner{
+    display:none; width:100%; height:220px; background-size:cover; background-position:center;
+    border-radius:16px; margin-bottom:24px;
+  }
   .eyebrow{
     font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
     color:var(--forest); font-weight:600; margin-bottom:12px;
@@ -236,6 +240,7 @@
 </header>
 
 <section class="hero">
+  <div id="hero-banner"></div>
   <div class="wrap">
     <div class="eyebrow">BizFlow storefront</div>
     <h1 class="hero-title" id="hero-title">Welcome</h1>
@@ -361,6 +366,25 @@
 <script>
 const API_BASE = 'https://bizflow-api-v0sd.onrender.com';
 
+// Must match STORE_THEMES in the dashboard and VALID_THEMES on the backend.
+// tint/sage are derived light-wash colors used for active states and
+// background gradients throughout the page.
+const THEME_PALETTES = {
+  forest:   { primary: '#1F5F45', dark: '#153F2F', accent: '#DE9530', tint: '#E7F0EA', sage: '#E3ECE4' },
+  midnight: { primary: '#1E2A5E', dark: '#141C42', accent: '#E8B74D', tint: '#E6E9F5', sage: '#DDE1F0' },
+  rose:     { primary: '#7A2E44', dark: '#551F2F', accent: '#D9A441', tint: '#F3E5EA', sage: '#EEDDE3' },
+  ocean:    { primary: '#14607A', dark: '#0D4356', accent: '#E8935B', tint: '#E1EEF2', sage: '#D8E8ED' },
+};
+function applyTheme(themeKey){
+  const t = THEME_PALETTES[themeKey] || THEME_PALETTES.forest;
+  const root = document.documentElement.style;
+  root.setProperty('--forest', t.primary);
+  root.setProperty('--forest-dark', t.dark);
+  root.setProperty('--ochre', t.accent);
+  root.setProperty('--forest-tint', t.tint);
+  root.setProperty('--sage', t.sage);
+}
+
 // Which merchant's store this is comes from the link itself, e.g.
 // yourstore.onrender.com/?business=2 — NOT a fixed number in the code.
 // That's what lets one storefront file work for every BizFlow merchant.
@@ -425,9 +449,28 @@ async function loadStore(){
     const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/store`);
     if(!res.ok) throw new Error();
     const store = await res.json();
+
+    applyTheme(store.theme);
+
     document.getElementById('brand-name').textContent = store.name;
-    document.getElementById('brand-initial').textContent = store.name.charAt(0).toUpperCase();
     document.getElementById('hero-title').textContent = store.name;
+
+    const brandMark = document.getElementById('brand-initial');
+    if(store.logoUrl){
+      brandMark.innerHTML = `<img src="${store.logoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">`;
+    } else {
+      brandMark.textContent = store.name.charAt(0).toUpperCase();
+    }
+
+    if(store.description){
+      document.getElementById('hero-desc').textContent = store.description;
+    }
+
+    if(store.bannerUrl){
+      const banner = document.getElementById('hero-banner');
+      banner.style.backgroundImage = `url('${store.bannerUrl}')`;
+      banner.style.display = 'block';
+    }
   } catch(err){
     document.getElementById('brand-name').textContent = 'Store';
     document.getElementById('hero-title').textContent = 'Welcome';
