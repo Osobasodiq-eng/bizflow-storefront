@@ -331,11 +331,17 @@
 
         <div class="field"><label>Full name</label><input id="co-name" type="text" placeholder="e.g. Amaka Obi"></div>
         <div class="field"><label>Phone number</label><input id="co-phone" type="text" placeholder="e.g. 0803 210 4477"></div>
+        <div class="field" id="co-zone-field">
+          <label>Delivery location</label>
+          <select id="co-zone" class="modal-input" onchange="onZoneChange()" style="width:100%;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit;background:var(--paper);"></select>
+        </div>
         <div class="field" id="co-addr-field"><label>Delivery address</label><input id="co-address" type="text" placeholder="e.g. 14 Allen Avenue, Ikeja, Lagos"></div>
         <div class="field-error" id="co-error" style="display:none;"></div>
 
         <div class="co-summary">
-          <div class="summary-row total" style="border:none; padding:0; margin:0;"><span>Total</span><span class="val" id="co-total">₦0</span></div>
+          <div class="summary-row"><span>Subtotal</span><span class="val" id="co-subtotal">₦0</span></div>
+          <div class="summary-row" id="co-delivery-fee-row"><span>Delivery fee</span><span class="val" id="co-delivery-fee">₦0</span></div>
+          <div class="summary-row total"><span>Total</span><span class="val" id="co-total">₦0</span></div>
         </div>
 
         <button class="btn-primary" id="co-submit-btn" onclick="placeOrder()">Place order</button>
@@ -412,6 +418,8 @@ if(!BUSINESS_ID){
 }
 
 let ALL_PRODUCTS = [];
+let ALL_ZONES = [];
+let selectedZoneId = null;
 let cart = {}; // productId -> { product, qty }
 let activeCategory = 'All';
 let activeProduct = null;
@@ -635,13 +643,44 @@ function setMethod(m){
   document.getElementById('method-delivery').classList.toggle('active', m==='delivery');
   document.getElementById('method-pickup').classList.toggle('active', m==='pickup');
   document.getElementById('co-addr-field').style.display = m==='delivery' ? 'block' : 'none';
+  document.getElementById('co-zone-field').style.display = m==='delivery' ? 'block' : 'none';
+  renderCheckoutTotals();
+}
+
+function onZoneChange(){
+  selectedZoneId = document.getElementById('co-zone').value || null;
+  renderCheckoutTotals();
+}
+
+function currentDeliveryFee(){
+  if(deliveryMethod !== 'delivery' || !selectedZoneId) return 0;
+  const zone = ALL_ZONES.find(z => String(z.id) === String(selectedZoneId));
+  return zone ? zone.fee : 0;
+}
+
+function renderCheckoutTotals(){
+  const subtotal = cartSubtotal();
+  const fee = currentDeliveryFee();
+  document.getElementById('co-subtotal').textContent = money(subtotal);
+  document.getElementById('co-delivery-fee').textContent = money(fee);
+  document.getElementById('co-delivery-fee-row').style.display = deliveryMethod === 'delivery' ? 'flex' : 'none';
+  document.getElementById('co-total').textContent = money(subtotal + fee);
 }
 
 function openCart(){ renderCart(); openOverlay('cart'); }
 function openCheckout(){
   if(!cartCount()){ toast('Your cart is empty'); return; }
-  document.getElementById('co-total').textContent = money(cartSubtotal());
   document.getElementById('co-error').style.display = 'none';
+
+  const zoneSelect = document.getElementById('co-zone');
+  if(ALL_ZONES.length){
+    zoneSelect.innerHTML = ALL_ZONES.map(z => `<option value="${z.id}">${z.locationName} — ${money(z.fee)}</option>`).join('');
+    selectedZoneId = ALL_ZONES[0].id;
+  } else {
+    zoneSelect.innerHTML = `<option value="">No delivery locations set up — choose pickup instead</option>`;
+    selectedZoneId = null;
+  }
+  setMethod(deliveryMethod); // re-applies visibility + recalculates totals for the current method
   closeOverlay('cart');
   openOverlay('checkout');
 }
@@ -662,16 +701,23 @@ async function placeOrder(){
     errorEl.style.display = 'block';
     return;
   }
+  if(deliveryMethod === 'delivery' && !selectedZoneId){
+    errorEl.textContent = 'Please choose a delivery location, or switch to pickup.';
+    errorEl.style.display = 'block';
+    return;
+  }
   errorEl.style.display = 'none';
 
   const btn = document.getElementById('co-submit-btn');
   btn.disabled = true;
   btn.textContent = 'Placing order…';
 
+  const zoneName = deliveryMethod === 'delivery' ? ALL_ZONES.find(z => String(z.id) === String(selectedZoneId))?.locationName : null;
   const body = {
     items: Object.values(cart).map(i => ({ productId: i.product.id, qty: i.qty })),
-    customer: { name, phone, location: deliveryMethod === 'delivery' ? address : 'Pickup' },
-    delivery: deliveryMethod === 'delivery' ? address : 'Pickup at store',
+    customer: { name, phone, location: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup' },
+    delivery: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup at store',
+    deliveryZoneId: deliveryMethod === 'delivery' ? selectedZoneId : null,
   };
 
   try{
@@ -682,9 +728,14 @@ async function placeOrder(){
     if(!res.ok) throw new Error(order.error || 'Could not place order');
 
     document.getElementById('order-number').textContent = order.id;
-    document.getElementById('confirm-items').innerHTML = order.items.map(i =>
-      `<div class="receipt-row"><span>${i.qty}× ${i.name}</span><span class="val">${money(0)}</span></div>`
-    ).join('');
+    document.getElementById('confirm-items').innerHTML = order.items.map(i => {
+      const cartEntry = cart[i.productId];
+      const lineTotal = cartEntry ? cartEntry.product.price * i.qty : 0;
+      return `<div class="receipt-row"><span>${i.qty}× ${i.name}</span><span class="val">${money(lineTotal)}</span></div>`;
+    }).join('');
+    if(order.deliveryFee > 0){
+      document.getElementById('confirm-items').innerHTML += `<div class="receipt-row"><span>Delivery fee</span><span class="val">${money(order.deliveryFee)}</span></div>`;
+    }
     document.getElementById('cf-total').textContent = money(order.amount);
 
     cart = {};
@@ -716,8 +767,19 @@ function toast(msg){
   window._toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
 }
 
+async function loadDeliveryZones(){
+  try{
+    const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/delivery-zones`);
+    if(!res.ok) throw new Error();
+    ALL_ZONES = await res.json();
+  } catch(err){
+    ALL_ZONES = [];
+  }
+}
+
 loadStore();
 loadProducts();
+loadDeliveryZones();
 </script>
 
 </body>
