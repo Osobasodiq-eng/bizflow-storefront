@@ -6,223 +6,300 @@
 <title>BizFlow Storefront</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+(function(){
+  var saved = localStorage.getItem('bizflow-mode');
+  var mode = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-mode', mode);
+})();
+</script>
 <style>
   :root{
-    --ink:#14231B; --ink-soft:#5C6960; --paper:#FAF9F5; --card:#FFFFFF;
-    --forest:#1F5F45; --forest-dark:#153F2F; --forest-tint:#E7F0EA;
-    --ochre:#DE9530; --ochre-tint:#FBEBD3; --sage:#E3ECE4; --line:#E7E3D8; --red:#C0392B;
-    --shadow: 0 20px 50px rgba(20,35,27,0.10);
-    --maxw: 1180px;
+    --brand:#1F5F45; --brand-dark:#153F2F; --accent:#DE9530;
+    --brand-rgb:31,95,69; --accent-rgb:222,149,48;
+    --brand-tint: rgba(var(--brand-rgb), 0.12);
+    --accent-tint: rgba(var(--accent-rgb), 0.14);
+    --brand-glow: rgba(var(--brand-rgb), 0.18);
+    --accent-glow: rgba(var(--accent-rgb), 0.18);
+
+    --bg:#FAFAFA; --surface:#FFFFFF; --surface-2:#F2F2F0; --border:#E6E5E2;
+    --text:#14171A; --text-soft:#5B6470; --red:#C0392B;
+    --shadow: 0 20px 50px rgba(20,23,26,0.10);
   }
+  [data-mode="dark"]{
+    --bg:#0E1012; --surface:#17191C; --surface-2:#1D2023; --border:#2B2E33;
+    --text:#F2F1ED; --text-soft:#9AA1AB; --red:#E5695C;
+    --shadow: 0 20px 50px rgba(0,0,0,0.45);
+  }
+
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html{scroll-behavior:smooth;}
-  body{ margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased; transition:background .25s ease, color .25s ease;
+  }
   a{color:inherit; text-decoration:none;}
-  .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 32px; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 32px; }
   button{ font-family:inherit; cursor:pointer; }
+  select, input, textarea{ font-family:inherit; }
 
   header.nav{
-    position:sticky; top:0; z-index:100; background:rgba(250,249,245,0.92); backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:100; background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
   }
-  .nav-row{ display:flex; align-items:center; justify-content:space-between; padding:16px 32px; gap:24px; }
-  .brand{ display:flex; align-items:center; gap:10px; }
+  .nav-row{ display:flex; align-items:center; justify-content:space-between; padding:14px 32px; gap:18px; }
+  .brand{ display:flex; align-items:center; gap:11px; min-width:0; }
   .brand-mark{
-    width:38px; height:38px; border-radius:11px; background:linear-gradient(155deg,var(--forest) 0%, var(--forest-dark) 100%);
-    display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px; flex-shrink:0;
+    width:40px; height:40px; border-radius:12px; background:linear-gradient(155deg, var(--brand) 0%, var(--brand-dark) 100%);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:16px;
+    flex-shrink:0; box-shadow:0 6px 18px var(--brand-glow); overflow:hidden;
   }
-  .brand-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; line-height:1.1; }
-  .brand-sub{ font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.1em; }
+  .brand-text{ min-width:0; }
+  .brand-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .brand-sub{ font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--text-soft); text-transform:uppercase; letter-spacing:.1em; }
+
+  .nav-search{
+    display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:11px; padding:9px 13px; width:230px; flex-shrink:1; min-width:0;
+  }
+  .nav-search svg{ width:15px; height:15px; stroke:var(--text-soft); flex-shrink:0; }
+  .nav-search input{ border:none; outline:none; background:transparent; font-size:13px; width:100%; color:var(--text); min-width:0; }
+
+  .nav-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
   .icon-btn{
-    width:40px; height:40px; border-radius:12px; background:var(--card); border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center; position:relative; flex-shrink:0;
+    width:38px; height:38px; border-radius:11px; background:var(--surface-2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; position:relative; flex-shrink:0; transition:border-color .15s;
   }
-  .icon-btn svg{ width:18px; height:18px; stroke:var(--ink); }
+  .icon-btn:hover{ border-color:var(--brand); }
+  .icon-btn svg{ width:17px; height:17px; stroke:var(--text); }
   .badge{
     position:absolute; top:-6px; right:-6px; min-width:18px; height:18px; padding:0 4px; border-radius:9px;
-    background:var(--ochre); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600;
+    background:var(--accent); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600;
     display:flex; align-items:center; justify-content:center; transition:transform .25s cubic-bezier(.34,1.56,.64,1);
   }
   .badge.bump{ transform:scale(1.35); }
 
-  .hero{ padding:52px 0 40px; position:relative; }
-  #hero-banner{
-    display:none; width:100%; height:220px; background-size:cover; background-position:center;
-    border-radius:16px; margin-bottom:24px;
-  }
+  .hero{ padding:56px 0 48px; position:relative; overflow:hidden; }
+  .hero-grid{ display:grid; grid-template-columns:1.15fr 0.85fr; gap:48px; align-items:center; position:relative; z-index:1; }
   .eyebrow{
-    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--forest); font-weight:600; margin-bottom:12px;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--brand); font-weight:600; margin-bottom:14px; display:flex; align-items:center; gap:8px;
   }
-  h1.hero-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:38px; line-height:1.15; margin:0 0 10px; }
-  .hero-desc{ font-size:15px; color:var(--ink-soft); }
+  .eyebrow::before{ content:""; width:18px; height:1.5px; background:var(--brand); }
+  h1.hero-title{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:44px; line-height:1.08; margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  .hero-desc{ font-size:15.5px; color:var(--text-soft); line-height:1.65; max-width:480px; margin-bottom:22px; }
+  .hero-cta{
+    background:var(--brand); color:#fff; border:none; border-radius:13px; padding:14px 24px; font-weight:700; font-size:14px;
+    display:inline-flex; align-items:center; gap:8px; box-shadow:0 12px 28px var(--brand-glow); transition:transform .15s;
+  }
+  .hero-cta:hover{ transform:translateY(-2px); }
+
+  .hero-aura{
+    position:relative; aspect-ratio:1/1; border-radius:28px; overflow:hidden;
+    background:
+      radial-gradient(circle at 28% 28%, var(--brand-glow) 0%, transparent 55%),
+      radial-gradient(circle at 75% 70%, var(--accent-glow) 0%, transparent 50%),
+      var(--surface-2);
+    border:1px solid var(--border);
+  }
+  .hero-aura::after{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 50%, transparent 40%, var(--bg) 100%);
+    opacity:.4;
+  }
+  .hero-aura-banner{ position:absolute; inset:0; background-size:cover; background-position:center; }
+  .hero-aura-mark{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15vw; color:var(--brand); opacity:.14;
+  }
 
   .status-banner{
-    display:flex; align-items:center; gap:10px; background:var(--forest-tint); color:var(--forest-dark);
-    border-radius:12px; padding:12px 16px; font-size:13px; margin:18px 0 0;
+    display:flex; align-items:center; gap:10px; background:var(--brand-tint); color:var(--brand);
+    border-radius:12px; padding:12px 16px; font-size:13px; margin-top:18px;
   }
-  .status-banner.error{ background:#FCEBEB; color:var(--red); }
+  .status-banner.error{ background:rgba(192,57,43,0.12); color:var(--red); }
   .spinner{
-    width:14px; height:14px; border-radius:50%; border:2px solid rgba(31,95,69,0.25); border-top-color:var(--forest);
+    width:14px; height:14px; border-radius:50%; border:2px solid var(--brand-tint); border-top-color:var(--brand);
     animation:spin .7s linear infinite; flex-shrink:0;
   }
   @keyframes spin{ to{ transform:rotate(360deg); } }
 
-  .cat-strip{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--card); }
-  .cat-row{ display:flex; gap:10px; padding:16px 0; overflow-x:auto; }
+  .cat-strip{ border-top:1px solid var(--border); border-bottom:1px solid var(--border); background:var(--surface); position:relative; z-index:1; }
+  .cat-row{ display:flex; gap:9px; padding:16px 0; overflow-x:auto; }
   .cat-chip{
-    flex-shrink:0; padding:9px 18px; border-radius:22px; font-size:13px; font-weight:600; background:var(--paper);
-    border:1px solid var(--line); color:var(--ink-soft); white-space:nowrap; transition:all .15s;
+    flex-shrink:0; padding:9px 17px; border-radius:20px; font-size:13px; font-weight:600; background:var(--surface-2);
+    border:1px solid var(--border); color:var(--text-soft); white-space:nowrap; transition:all .15s;
   }
-  .cat-chip.active, .cat-chip:hover{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .cat-chip.active{ background:var(--brand); color:#fff; border-color:var(--brand); }
 
-  .section{ padding:44px 0 60px; }
+  .section{ padding:44px 0 56px; position:relative; z-index:1; }
   .section-head{ margin-bottom:26px; }
   .section-head h2{ font-family:'Space Grotesk',sans-serif; font-size:24px; margin:0; }
 
-  .grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:22px; }
+  .grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; }
   .product-card{
-    background:var(--card); border:1px solid var(--line); border-radius:18px; overflow:hidden; cursor:pointer;
-    transition:transform .18s ease, box-shadow .18s ease;
+    background:var(--surface); border:1px solid var(--border); border-radius:17px; overflow:hidden; cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
   }
-  .product-card:hover{ transform:translateY(-4px); box-shadow:var(--shadow); }
-  .product-card.oos{ opacity:0.55; cursor:default; }
-  .product-card.oos:hover{ transform:none; box-shadow:none; }
-  .product-thumb{ aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .product-card:hover{ transform:translateY(-4px); box-shadow:0 18px 36px var(--brand-glow); border-color:var(--brand); }
+  .product-card.oos{ opacity:0.5; cursor:default; }
+  .product-card.oos:hover{ transform:none; box-shadow:none; border-color:var(--border); }
+  .product-thumb{ aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; background:var(--surface-2); }
   .product-thumb svg{ width:46%; height:46%; }
   .oos-tag{
-    position:absolute; top:12px; left:12px; background:var(--ink); color:#fff; font-family:'IBM Plex Mono',monospace;
+    position:absolute; top:11px; left:11px; background:var(--text); color:var(--bg); font-family:'IBM Plex Mono',monospace;
     font-size:10px; font-weight:600; padding:4px 9px; border-radius:7px; z-index:2;
   }
   .quick-add{
-    position:absolute; bottom:12px; right:12px; width:36px; height:36px; border-radius:11px; background:var(--ink);
-    color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:19px; opacity:0;
+    position:absolute; bottom:11px; right:11px; width:34px; height:34px; border-radius:10px; background:var(--brand);
+    color:#fff; border:none; display:flex; align-items:center; justify-content:center; font-size:18px; opacity:0;
     transform:translateY(6px); transition:all .18s;
   }
   .product-card:hover .quick-add{ opacity:1; transform:translateY(0); }
-  .product-info{ padding:16px 16px 18px; }
-  .product-cat{ font-size:10.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.08em; font-family:'IBM Plex Mono',monospace; margin-bottom:5px; }
-  .product-name{ font-size:14.5px; font-weight:600; margin-bottom:9px; line-height:1.3; }
-  .product-price{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px; }
+  .product-info{ padding:15px 15px 17px; }
+  .product-cat{ font-size:10px; color:var(--text-soft); text-transform:uppercase; letter-spacing:.08em; font-family:'IBM Plex Mono',monospace; margin-bottom:5px; }
+  .product-name{ font-size:14px; font-weight:600; margin-bottom:8px; line-height:1.3; }
+  .product-price{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:14.5px; color:var(--brand); }
 
-  footer{ background:var(--ink); color:#EDEAE0; padding:36px 0; margin-top:20px; text-align:center; }
-  footer p{ font-size:12px; color:#8A9690; font-family:'IBM Plex Mono',monospace; margin:0; }
+  .empty-state{ text-align:center; padding:70px 20px; }
+  .empty-state svg{ width:56px; height:56px; stroke:var(--border); margin-bottom:14px; }
+  .empty-state h4{ font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0 0 6px; }
+  .empty-state p{ font-size:13px; color:var(--text-soft); margin:0; }
+
+  .trust{ background:var(--surface-2); padding:32px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+  .trust-row{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:22px; }
+  .trust-item{ display:flex; align-items:center; gap:11px; min-width:200px; }
+  .trust-item .trust-icon{
+    width:36px; height:36px; border-radius:10px; background:var(--brand-tint); display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .trust-item svg{ width:18px; height:18px; stroke:var(--brand); }
+  .trust-item b{ display:block; font-size:13px; }
+  .trust-item span{ font-size:11.5px; color:var(--text-soft); }
+
+  footer{ padding:36px 0; text-align:center; }
+  .footer-mark{ display:flex; align-items:center; justify-content:center; gap:9px; margin-bottom:10px; }
+  .footer-mark .brand-mark{ width:26px; height:26px; font-size:11px; border-radius:8px; }
+  .footer-name{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; }
+  footer p{ font-size:11px; color:var(--text-soft); font-family:'IBM Plex Mono',monospace; margin:0; }
 
   .overlay{ position:fixed; inset:0; z-index:200; display:none; }
   .overlay.open{ display:block; }
-  .overlay-scrim{ position:absolute; inset:0; background:rgba(20,35,27,0.45); backdrop-filter:blur(2px); opacity:0; transition:opacity .2s ease; }
+  .overlay-scrim{ position:absolute; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(2px); opacity:0; transition:opacity .2s ease; }
   .overlay.open .overlay-scrim{ opacity:1; }
 
   .drawer{
-    position:absolute; top:0; right:0; height:100%; width:420px; max-width:92vw; background:var(--paper);
-    box-shadow:-20px 0 50px rgba(0,0,0,0.15); display:flex; flex-direction:column;
+    position:absolute; top:0; right:0; height:100%; width:420px; max-width:92vw; background:var(--bg);
+    box-shadow:-20px 0 50px rgba(0,0,0,0.25); display:flex; flex-direction:column;
     transform:translateX(100%); transition:transform .28s cubic-bezier(.2,.9,.25,1);
   }
   .overlay.open .drawer{ transform:translateX(0); }
-  .drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:22px 24px; border-bottom:1px solid var(--line); flex-shrink:0; }
+  .drawer-head{ display:flex; align-items:center; justify-content:space-between; padding:22px 24px; border-bottom:1px solid var(--border); flex-shrink:0; }
   .drawer-head h3{ font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0; }
   .close-x{
-    width:36px; height:36px; border-radius:11px; background:var(--card); border:1px solid var(--line);
+    width:36px; height:36px; border-radius:11px; background:var(--surface-2); border:1px solid var(--border);
     display:flex; align-items:center; justify-content:center; cursor:pointer;
   }
-  .close-x svg{ width:16px; height:16px; stroke:var(--ink); }
+  .close-x svg{ width:16px; height:16px; stroke:var(--text); }
   .drawer-body{ flex:1; overflow-y:auto; padding:10px 24px; }
-  .drawer-foot{ padding:20px 24px 26px; border-top:1px solid var(--line); flex-shrink:0; }
+  .drawer-foot{ padding:20px 24px 26px; border-top:1px solid var(--border); flex-shrink:0; }
 
-  .cart-item{ display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); }
-  .cart-thumb{ width:64px; height:64px; border-radius:13px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+  .cart-item{ display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--border); }
+  .cart-thumb{ width:64px; height:64px; border-radius:13px; flex-shrink:0; display:flex; align-items:center; justify-content:center; background:var(--surface-2); }
   .cart-thumb svg{ width:56%; height:56%; }
   .cart-item-body{ flex:1; display:flex; flex-direction:column; justify-content:space-between; }
   .cart-item-name{ font-size:13.5px; font-weight:600; }
-  .cart-item-cat{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .cart-item-cat{ font-size:11px; color:var(--text-soft); margin-top:2px; }
   .cart-item-bottom{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; }
   .cart-item-price{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13.5px; }
   .mini-stepper{ display:flex; align-items:center; gap:10px; }
-  .mini-step-btn{ width:24px; height:24px; border-radius:7px; border:1.5px solid var(--line); background:var(--card); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; }
+  .mini-step-btn{ width:24px; height:24px; border-radius:7px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; }
   .step-val{ font-family:'IBM Plex Mono',monospace; font-weight:600; min-width:16px; text-align:center; }
 
-  .summary-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft); padding:6px 0; }
-  .summary-row.total{ color:var(--ink); font-weight:700; font-size:15.5px; border-top:1px dashed var(--line); margin-top:8px; padding-top:14px; }
+  .summary-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--text-soft); padding:6px 0; }
+  .summary-row.total{ color:var(--text); font-weight:700; font-size:15.5px; border-top:1px dashed var(--border); margin-top:8px; padding-top:14px; }
   .summary-row .val{ font-family:'IBM Plex Mono',monospace; }
 
-  .empty-state{ text-align:center; padding:70px 20px; }
-  .empty-state svg{ width:56px; height:56px; stroke:#C9C2B2; margin-bottom:14px; }
-  .empty-state h4{ font-family:'Space Grotesk',sans-serif; font-size:16px; margin:0 0 6px; }
-  .empty-state p{ font-size:13px; color:var(--ink-soft); margin:0; }
-
   .btn-primary{
-    background:var(--forest); color:#fff; border:none; border-radius:13px; padding:14px 22px; font-weight:700; font-size:14px;
-    display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; transition:background .15s;
+    background:var(--brand); color:#fff; border:none; border-radius:13px; padding:14px 22px; font-weight:700; font-size:14px;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%; transition:background .15s, transform .15s;
+    box-shadow:0 10px 24px var(--brand-glow);
   }
-  .btn-primary:hover{ background:var(--forest-dark); }
-  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn-primary:hover{ transform:translateY(-1px); }
+  .btn-primary:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
 
   .modal-outer{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:30px; overflow-y:auto; }
   .modal{
-    background:var(--card); border-radius:24px; width:100%; box-shadow:var(--shadow); position:relative;
-    opacity:0; transform:translateY(16px) scale(.98); transition:all .22s cubic-bezier(.2,.9,.25,1);
+    background:var(--surface); border-radius:22px; width:100%; box-shadow:var(--shadow); position:relative;
+    opacity:0; transform:translateY(16px) scale(.98); transition:all .22s cubic-bezier(.2,.9,.25,1); border:1px solid var(--border);
   }
   .overlay.open .modal{ opacity:1; transform:translateY(0) scale(1); }
   .modal.modal-product{ max-width:760px; display:grid; grid-template-columns:1fr 1fr; overflow:hidden; }
   .modal.modal-checkout{ max-width:520px; padding:36px; }
   .modal.modal-confirm{ max-width:480px; padding:40px; text-align:center; }
+  .close-x-abs{ position:absolute; top:18px; right:18px; z-index:5; }
 
-  .pm-visual{ background:linear-gradient(155deg, var(--sage) 0%, #F3EFE2 100%); display:flex; align-items:center; justify-content:center; padding:40px; }
-  .pm-visual svg{ width:56%; height:56%; }
+  .pm-visual{ background:var(--surface-2); display:flex; align-items:center; justify-content:center; padding:40px; }
+  .pm-visual svg, .pm-visual img{ width:56%; height:56%; }
   .pm-info{ padding:40px 40px 40px 34px; }
-  .pm-cat{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--forest); text-transform:uppercase; letter-spacing:.1em; font-weight:600; }
+  .pm-cat{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brand); text-transform:uppercase; letter-spacing:.1em; font-weight:600; }
   .pm-title{ font-family:'Space Grotesk',sans-serif; font-size:24px; font-weight:700; margin:8px 0 14px; }
-  .pm-price{ font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600; margin-bottom:22px; }
-  .pm-desc{ font-size:13.5px; line-height:1.65; color:var(--ink-soft); margin-bottom:18px; }
-  .pm-specs{ border-top:1px solid var(--line); padding-top:14px; margin-bottom:18px; }
+  .pm-price{ font-family:'IBM Plex Mono',monospace; font-size:24px; font-weight:600; margin-bottom:18px; color:var(--brand); }
+  .pm-desc{ font-size:13.5px; line-height:1.65; color:var(--text-soft); margin-bottom:18px; }
+  .pm-specs{ border-top:1px solid var(--border); padding-top:14px; margin-bottom:18px; }
   .pm-spec-row{ display:flex; justify-content:space-between; font-size:12.5px; padding:6px 0; }
-  .pm-spec-row span:first-child{ color:var(--ink-soft); }
+  .pm-spec-row span:first-child{ color:var(--text-soft); }
   .pm-spec-row span:last-child{ font-weight:600; text-align:right; }
   .pm-oos-note{ font-size:13px; color:var(--red); margin-bottom:18px; font-weight:600; }
 
-  .stepper{ display:flex; align-items:center; gap:14px; border:1.5px solid var(--line); border-radius:13px; padding:10px 16px; width:fit-content; margin-bottom:18px; }
+  .stepper{ display:flex; align-items:center; gap:14px; border:1px solid var(--border); border-radius:13px; padding:10px 16px; width:fit-content; margin-bottom:18px; }
   .step-btn{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; font-weight:600; user-select:none; }
 
   .co-form h2{ font-family:'Space Grotesk',sans-serif; font-size:22px; margin:0 0 6px; }
-  .co-form p.sub{ font-size:13px; color:var(--ink-soft); margin:0 0 22px; }
+  .co-form p.sub{ font-size:13px; color:var(--text-soft); margin:0 0 22px; }
   .method-row{ display:flex; gap:10px; margin-bottom:16px; }
-  .method-tile{ flex:1; border:1.5px solid var(--line); border-radius:14px; padding:14px 10px; text-align:center; cursor:pointer; background:var(--paper); }
-  .method-tile.active{ border-color:var(--forest); background:var(--forest-tint); }
-  .method-tile svg{ width:20px; height:20px; margin-bottom:6px; stroke:var(--ink); }
+  .method-tile{ flex:1; border:1px solid var(--border); border-radius:14px; padding:14px 10px; text-align:center; cursor:pointer; background:var(--surface-2); }
+  .method-tile.active{ border-color:var(--brand); background:var(--brand-tint); }
+  .method-tile svg{ width:20px; height:20px; margin-bottom:6px; stroke:var(--text); }
   .method-tile span{ display:block; font-size:11.5px; font-weight:600; }
   .field{ margin-bottom:14px; }
-  .field label{ font-size:11.5px; font-weight:600; color:var(--ink-soft); display:block; margin-bottom:6px; }
+  .field label{ font-size:11.5px; font-weight:600; color:var(--text-soft); display:block; margin-bottom:6px; }
   .field input{
-    width:100%; border:1.5px solid var(--line); border-radius:11px; padding:11px 13px; font-size:13.5px; font-family:inherit;
-    outline:none; background:var(--paper);
+    width:100%; border:1px solid var(--border); border-radius:11px; padding:11px 13px; font-size:13.5px; font-family:inherit;
+    outline:none; background:var(--surface-2); color:var(--text);
   }
-  .field input:focus{ border-color:var(--forest); }
+  .field input:focus{ border-color:var(--brand); }
   .field-error{ font-size:11.5px; color:var(--red); margin-top:5px; }
 
-  .co-summary{ background:var(--paper); border-radius:13px; padding:14px 16px; margin:18px 0; }
+  .co-summary{ background:var(--surface-2); border-radius:13px; padding:14px 16px; margin:18px 0; }
 
-  .success-badge{ width:64px; height:64px; border-radius:50%; background:var(--forest-tint); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
-  .success-badge svg{ width:28px; height:28px; stroke:var(--forest); }
-  .receipt{ background:#FFFDF7; border-radius:16px; margin-top:18px; text-align:left; position:relative; border:1px solid var(--line); }
-  .receipt-top{ padding:18px 22px; text-align:center; border-bottom:1px dashed #D9D2C0; }
+  .success-badge{ width:64px; height:64px; border-radius:50%; background:var(--brand-tint); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .success-badge svg{ width:28px; height:28px; stroke:var(--brand); }
+  .receipt{ background:var(--surface-2); border-radius:16px; margin-top:18px; text-align:left; position:relative; border:1px solid var(--border); }
+  .receipt-top{ padding:18px 22px; text-align:center; border-bottom:1px dashed var(--border); }
   .receipt-body{ padding:14px 22px; }
-  .receipt-row{ display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; color:var(--ink-soft); }
-  .receipt-row.strong{ color:var(--ink); font-weight:700; border-top:1px dashed #D9D2C0; margin-top:6px; padding-top:12px; }
+  .receipt-row{ display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; color:var(--text-soft); }
+  .receipt-row.strong{ color:var(--text); font-weight:700; border-top:1px dashed var(--border); margin-top:6px; padding-top:12px; }
   .receipt-row .val{ font-family:'IBM Plex Mono',monospace; }
-  .close-x-abs{ position:absolute; top:18px; right:18px; z-index:5; }
 
   .toast{
-    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--ink); color:#fff;
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:var(--bg);
     padding:13px 20px; border-radius:13px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:9px;
     opacity:0; transition:all .25s ease; z-index:300; pointer-events:none; box-shadow:var(--shadow);
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  @media (max-width: 1020px){ .grid{ grid-template-columns:repeat(3,1fr); } }
-  @media (max-width: 860px){ .modal.modal-product{ grid-template-columns:1fr; max-width:520px; } .pm-visual{ padding:30px; max-height:240px; } }
+  @media (max-width: 1020px){ .grid{ grid-template-columns:repeat(3,1fr); } .hero-grid{ grid-template-columns:1fr; } .hero-aura{ max-width:360px; margin:0 auto; order:-1; } }
+  @media (max-width: 860px){
+    .nav-search{ display:none; }
+    .modal.modal-product{ grid-template-columns:1fr; max-width:520px; } .pm-visual{ padding:30px; max-height:240px; }
+  }
   @media (max-width: 640px){
-    .wrap{ padding:0 18px; } .grid{ grid-template-columns:repeat(2,1fr); gap:14px; }
-    h1.hero-title{ font-size:28px; } .drawer{ width:100%; max-width:100%; }
+    .wrap{ padding:0 18px; } .grid{ grid-template-columns:repeat(2,1fr); gap:13px; }
+    h1.hero-title{ font-size:30px; } .hero{ padding:36px 0 32px; } .drawer{ width:100%; max-width:100%; }
+    .trust-row{ justify-content:flex-start; }
   }
 </style>
 </head>
@@ -232,25 +309,43 @@
   <div class="nav-row wrap">
     <div class="brand">
       <div class="brand-mark" id="brand-initial">?</div>
-      <div>
+      <div class="brand-text">
         <div class="brand-name" id="brand-name">Loading store…</div>
         <div class="brand-sub">Powered by BizFlow</div>
       </div>
     </div>
-    <div class="icon-btn" onclick="openCart()">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L4.5 2H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
-      <div class="badge" id="cart-badge">0</div>
+    <div class="nav-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="search-input" type="text" placeholder="Search products…" oninput="onSearchInput()">
+    </div>
+    <div class="nav-actions">
+      <div class="icon-btn" onclick="toggleMode()" title="Toggle light/dark mode">
+        <span id="mode-toggle-icon"></span>
+      </div>
+      <div class="icon-btn" onclick="openCart()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L4.5 2H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
+        <div class="badge" id="cart-badge">0</div>
+      </div>
     </div>
   </div>
 </header>
 
 <section class="hero">
-  <div class="wrap">
-    <div id="hero-banner"></div>
-    <div class="eyebrow">BizFlow storefront</div>
-    <h1 class="hero-title" id="hero-title">Welcome</h1>
-    <p class="hero-desc" id="hero-desc">Browse what's in stock and place an order — the seller will confirm payment with you directly.</p>
-    <div class="status-banner" id="status-banner" style="display:none;"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">BizFlow storefront</div>
+      <h1 class="hero-title" id="hero-title">Welcome</h1>
+      <p class="hero-desc" id="hero-desc">Browse what's in stock and place an order — the seller will confirm payment with you directly.</p>
+      <button class="hero-cta" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">
+        Browse products
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </button>
+      <div class="status-banner" id="status-banner" style="display:none;"></div>
+    </div>
+    <div class="hero-aura" id="hero-aura">
+      <div class="hero-aura-mark" id="hero-aura-mark">?</div>
+      <div class="hero-aura-banner" id="hero-aura-banner" style="display:none;"></div>
+    </div>
   </div>
 </section>
 
@@ -258,16 +353,25 @@
   <div class="wrap cat-row" id="chip-row"></div>
 </div>
 
-<section class="section">
+<section class="section" id="catalog">
   <div class="wrap">
     <div class="section-head"><h2 id="grid-title">All products</h2></div>
     <div class="grid" id="product-grid"></div>
   </div>
 </section>
 
-<footer><p>Storefront built on BizFlow</p></footer>
+<div class="trust">
+  <div class="wrap trust-row" id="trust-strip"></div>
+</div>
 
-<!-- CART DRAWER -->
+<footer>
+  <div class="footer-mark">
+    <div class="brand-mark" id="footer-mark">?</div>
+    <div class="footer-name" id="footer-name">Store</div>
+  </div>
+  <p>Powered by BizFlow</p>
+</footer>
+
 <div class="overlay" id="overlay-cart">
   <div class="overlay-scrim" onclick="closeOverlay('cart')"></div>
   <div class="drawer">
@@ -283,7 +387,6 @@
   </div>
 </div>
 
-<!-- PRODUCT MODAL -->
 <div class="overlay" id="overlay-product">
   <div class="overlay-scrim" onclick="closeOverlay('product')"></div>
   <div class="modal-outer">
@@ -308,7 +411,6 @@
   </div>
 </div>
 
-<!-- CHECKOUT MODAL -->
 <div class="overlay" id="overlay-checkout">
   <div class="overlay-scrim" onclick="closeOverlay('checkout')"></div>
   <div class="modal-outer">
@@ -316,7 +418,7 @@
       <div class="close-x close-x-abs" onclick="closeOverlay('checkout')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
       <div class="co-form">
         <h2>Checkout</h2>
-        <p class="sub">Enter your details — the seller will reach out to confirm payment and delivery.</p>
+        <p class="sub">Enter your details to continue.</p>
 
         <div class="method-row">
           <div class="method-tile active" id="method-delivery" onclick="setMethod('delivery')">
@@ -334,7 +436,7 @@
         <div class="field" id="co-email-field"><label>Email</label><input id="co-email" type="email" placeholder="e.g. amaka@email.com"></div>
         <div class="field" id="co-zone-field">
           <label>Delivery location</label>
-          <select id="co-zone" class="modal-input" onchange="onZoneChange()" style="width:100%;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit;background:var(--paper);"></select>
+          <select id="co-zone" onchange="onZoneChange()" style="width:100%;border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit;background:var(--surface-2);color:var(--text);"></select>
         </div>
         <div class="field" id="co-addr-field"><label>Delivery address</label><input id="co-address" type="text" placeholder="e.g. 14 Allen Avenue, Ikeja, Lagos"></div>
         <div class="field-error" id="co-error" style="display:none;"></div>
@@ -351,23 +453,22 @@
   </div>
 </div>
 
-<!-- CONFIRMATION MODAL -->
 <div class="overlay" id="overlay-confirm">
   <div class="overlay-scrim" onclick="closeOverlay('confirm')"></div>
   <div class="modal-outer">
     <div class="modal modal-confirm">
       <div class="success-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
       <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; margin-bottom:6px;">Order received</div>
-      <div style="font-size:13px; color:var(--ink-soft);">The seller has been notified and will reach out to confirm payment and delivery.</div>
+      <div style="font-size:13px; color:var(--text-soft);">The seller has been notified.</div>
       <div class="receipt">
         <div class="receipt-top">
-          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.1em; color:var(--ink-soft); text-transform:uppercase;">Order number</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.1em; color:var(--text-soft); text-transform:uppercase;">Order number</div>
           <div style="font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; margin-top:3px;" id="order-number">—</div>
         </div>
         <div class="receipt-body" id="confirm-items"></div>
         <div class="receipt-body" style="padding-top:0;">
           <div class="receipt-row strong"><span>Total</span><span class="val" id="cf-total">₦0</span></div>
-          <div class="receipt-row" style="margin-top:8px;"><span>Payment</span><span class="val">Awaiting — pay via transfer on confirmation</span></div>
+          <div class="receipt-row" style="margin-top:8px;" id="cf-payment-row"><span>Payment</span><span class="val" id="cf-payment-note">Awaiting — pay via transfer on confirmation</span></div>
         </div>
       </div>
       <button class="btn-primary" style="margin-top:22px;" onclick="closeOverlay('confirm')">Back to store</button>
@@ -379,35 +480,6 @@
 
 <script>
 const API_BASE = 'https://bizflow-api-v0sd.onrender.com';
-
-// Must match STORE_THEMES in the dashboard and VALID_THEMES on the backend.
-// tint/sage are derived light-wash colors used for active states and
-// background gradients throughout the page.
-const THEME_PALETTES = {
-  forest:     { primary: '#1F5F45', dark: '#153F2F', accent: '#DE9530', tint: '#E7F0EA', sage: '#E3ECE4' },
-  midnight:   { primary: '#1E2A5E', dark: '#141C42', accent: '#E8B74D', tint: '#E6E9F5', sage: '#DDE1F0' },
-  rose:       { primary: '#7A2E44', dark: '#551F2F', accent: '#D9A441', tint: '#F3E5EA', sage: '#EEDDE3' },
-  ocean:      { primary: '#14607A', dark: '#0D4356', accent: '#E8935B', tint: '#E1EEF2', sage: '#D8E8ED' },
-  plum:       { primary: '#5B2C6F', dark: '#3D1D4C', accent: '#D9A6E0', tint: '#F0E4F5', sage: '#E6D9ED' },
-  amber:      { primary: '#92600A', dark: '#5F3D00', accent: '#F0C24D', tint: '#FBF1D8', sage: '#F2E3B8' },
-  slate:      { primary: '#3D4C5C', dark: '#29343E', accent: '#7FA8C9', tint: '#E7ECEF', sage: '#DBE3E8' },
-  terracotta: { primary: '#A24A2C', dark: '#6E3019', accent: '#E8A165', tint: '#F6E7DD', sage: '#EEDACB' },
-  sage:       { primary: '#63765F', dark: '#45543F', accent: '#C9A66B', tint: '#E9EDE6', sage: '#DBE3D6' },
-  noir:       { primary: '#1F1F1F', dark: '#050505', accent: '#C9A961', tint: '#E9E9E9', sage: '#D6D6D6' },
-};
-function applyTheme(themeKey){
-  const t = THEME_PALETTES[themeKey] || THEME_PALETTES.forest;
-  const root = document.documentElement.style;
-  root.setProperty('--forest', t.primary);
-  root.setProperty('--forest-dark', t.dark);
-  root.setProperty('--ochre', t.accent);
-  root.setProperty('--forest-tint', t.tint);
-  root.setProperty('--sage', t.sage);
-}
-
-// Which merchant's store this is comes from the link itself, e.g.
-// yourstore.onrender.com/?business=2 — NOT a fixed number in the code.
-// That's what lets one storefront file work for every BizFlow merchant.
 const BUSINESS_ID = new URLSearchParams(window.location.search).get('business');
 
 if(!BUSINESS_ID){
@@ -418,11 +490,63 @@ if(!BUSINESS_ID){
   throw new Error('No business ID in URL — stopping storefront script.');
 }
 
+const THEME_PALETTES = {
+  forest:     { primary:'#1F5F45', dark:'#153F2F', accent:'#DE9530' },
+  midnight:   { primary:'#1E2A5E', dark:'#141C42', accent:'#E8B74D' },
+  rose:       { primary:'#7A2E44', dark:'#551F2F', accent:'#D9A441' },
+  ocean:      { primary:'#14607A', dark:'#0D4356', accent:'#E8935B' },
+  plum:       { primary:'#5B2C6F', dark:'#3D1D4C', accent:'#D9A6E0' },
+  amber:      { primary:'#92600A', dark:'#5F3D00', accent:'#F0C24D' },
+  slate:      { primary:'#3D4C5C', dark:'#29343E', accent:'#7FA8C9' },
+  terracotta: { primary:'#A24A2C', dark:'#6E3019', accent:'#E8A165' },
+  sage:       { primary:'#63765F', dark:'#45543F', accent:'#C9A66B' },
+  noir:       { primary:'#1F1F1F', dark:'#050505', accent:'#C9A961' },
+};
+let currentThemeKey = 'forest';
+
+function hexToRgb(hex){
+  const h = hex.replace('#','');
+  const n = parseInt(h, 16);
+  return `${(n>>16)&255}, ${(n>>8)&255}, ${n&255}`;
+}
+function applyTheme(themeKey){
+  currentThemeKey = themeKey;
+  const t = THEME_PALETTES[themeKey] || THEME_PALETTES.forest;
+  const mode = document.documentElement.getAttribute('data-mode');
+  const tintAlpha = mode === 'dark' ? 0.22 : 0.12;
+  const glowAlpha = mode === 'dark' ? 0.32 : 0.16;
+  const root = document.documentElement.style;
+  root.setProperty('--brand', t.primary);
+  root.setProperty('--brand-dark', t.dark);
+  root.setProperty('--accent', t.accent);
+  root.setProperty('--brand-rgb', hexToRgb(t.primary));
+  root.setProperty('--accent-rgb', hexToRgb(t.accent));
+  root.setProperty('--brand-tint', `rgba(var(--brand-rgb), ${tintAlpha})`);
+  root.setProperty('--accent-tint', `rgba(var(--accent-rgb), ${tintAlpha})`);
+  root.setProperty('--brand-glow', `rgba(var(--brand-rgb), ${glowAlpha})`);
+  root.setProperty('--accent-glow', `rgba(var(--accent-rgb), ${glowAlpha})`);
+}
+
+const SUN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;stroke:var(--text);"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`;
+const MOON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;stroke:var(--text);"><path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/></svg>`;
+function setMode(mode){
+  document.documentElement.setAttribute('data-mode', mode);
+  localStorage.setItem('bizflow-mode', mode);
+  document.getElementById('mode-toggle-icon').innerHTML = mode === 'dark' ? SUN_SVG : MOON_SVG;
+  applyTheme(currentThemeKey);
+}
+function toggleMode(){
+  const current = document.documentElement.getAttribute('data-mode');
+  setMode(current === 'dark' ? 'light' : 'dark');
+}
+setMode(document.documentElement.getAttribute('data-mode'));
+
 let ALL_PRODUCTS = [];
 let ALL_ZONES = [];
 let selectedZoneId = null;
-let cart = {}; // productId -> { product, qty }
+let cart = {};
 let activeCategory = 'All';
+let searchQuery = '';
 let activeProduct = null;
 let modalQty = 1;
 let deliveryMethod = 'delivery';
@@ -430,8 +554,6 @@ let paymentsEnabled = false;
 
 function money(n){ return '₦' + Number(n).toLocaleString('en-NG'); }
 
-// Deterministic color per product, so the same product always gets the same
-// placeholder swatch (we don't have real product photos yet).
 const SWATCHES = [
   ['#E7C89A','#C99A5B'], ['#6E8B5A','#3F5A34'], ['#D8C39A','#A6864F'],
   ['#BFE0C6','#7EB88A'], ['#DE9530','#B5761F'], ['#4A3B2A','#2C2116'],
@@ -449,13 +571,8 @@ function productSVG(p){
     <ellipse cx="50" cy="34" rx="22" ry="5" fill="#00000018"/>
   </svg>`;
 }
-
-// Shows the merchant's real uploaded photo when one exists; falls back to
-// the generated placeholder icon for products that don't have one yet.
 function productVisual(p){
-  if(p.imageUrl){
-    return `<img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`;
-  }
+  if(p.imageUrl) return `<img src="${p.imageUrl}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`;
   return productSVG(p);
 }
 
@@ -478,27 +595,64 @@ async function loadStore(){
 
     document.getElementById('brand-name').textContent = store.name;
     document.getElementById('hero-title').textContent = store.name;
+    document.getElementById('footer-name').textContent = store.name;
 
-    const brandMark = document.getElementById('brand-initial');
+    const initial = store.name.charAt(0).toUpperCase();
+    const brandInitial = document.getElementById('brand-initial');
+    const footerMark = document.getElementById('footer-mark');
+    const heroAuraMark = document.getElementById('hero-aura-mark');
+    heroAuraMark.textContent = initial;
     if(store.logoUrl){
-      brandMark.innerHTML = `<img src="${store.logoUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:11px;">`;
+      brandInitial.innerHTML = `<img src="${store.logoUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+      footerMark.innerHTML = `<img src="${store.logoUrl}" style="width:100%;height:100%;object-fit:cover;">`;
     } else {
-      brandMark.textContent = store.name.charAt(0).toUpperCase();
+      brandInitial.textContent = initial;
+      footerMark.textContent = initial;
     }
 
-    if(store.description){
-      document.getElementById('hero-desc').textContent = store.description;
-    }
+    if(store.description) document.getElementById('hero-desc').textContent = store.description;
 
     if(store.bannerUrl){
-      const banner = document.getElementById('hero-banner');
-      banner.style.backgroundImage = `url('${store.bannerUrl}')`;
-      banner.style.display = 'block';
+      const bannerEl = document.getElementById('hero-aura-banner');
+      bannerEl.style.backgroundImage = `url('${store.bannerUrl}')`;
+      bannerEl.style.display = 'block';
+      heroAuraMark.style.display = 'none';
     }
   } catch(err){
     document.getElementById('brand-name').textContent = 'Store';
     document.getElementById('hero-title').textContent = 'Welcome';
   }
+}
+
+async function loadDeliveryZones(){
+  try{
+    const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/delivery-zones`);
+    if(!res.ok) throw new Error();
+    ALL_ZONES = await res.json();
+  } catch(err){
+    ALL_ZONES = [];
+  }
+}
+
+function renderTrustStrip(){
+  const items = [];
+  if(paymentsEnabled){
+    items.push({ svg:`<path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/>`, title:'Secure checkout', sub:'Payments processed by Paystack' });
+  } else {
+    items.push({ svg:`<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4.5 5-6 8-6s6.5 1.5 8 6"/>`, title:'Pay the seller directly', sub:'Confirmed with you after ordering' });
+  }
+  if(ALL_ZONES.length){
+    items.push({ svg:`<rect x="1" y="6" width="14" height="10" rx="1"/><path d="M15 10h4l3 3v3h-7z"/><circle cx="6" cy="19" r="1.6"/><circle cx="17.5" cy="19" r="1.6"/>`, title:'Delivery available', sub:`${ALL_ZONES.length} location${ALL_ZONES.length>1?'s':''} to choose from` });
+  }
+  items.push({ svg:`<path d="M3 9l1.5-5h15L21 9"/><path d="M3 9v10h18V9"/><path d="M9 21v-6h6v6"/>`, title:'Pickup available', sub:'No delivery fee' });
+  items.push({ svg:`<path d="M20 6L9 17l-5-5"/>`, title:'Live stock', sub:'Shown quantities are always current' });
+
+  document.getElementById('trust-strip').innerHTML = items.map(i => `
+    <div class="trust-item">
+      <div class="trust-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${i.svg}</svg></div>
+      <div><b>${i.title}</b><span>${i.sub}</span></div>
+    </div>
+  `).join('');
 }
 
 async function loadProducts(){
@@ -524,19 +678,33 @@ function renderChips(){
 function filterCategory(cat){
   activeCategory = cat;
   renderChips();
-  document.getElementById('grid-title').textContent = cat === 'All' ? 'All products' : cat;
+  updateGridTitle();
   renderGrid();
+}
+function onSearchInput(){
+  searchQuery = document.getElementById('search-input').value.trim().toLowerCase();
+  updateGridTitle();
+  renderGrid();
+}
+function updateGridTitle(){
+  if(searchQuery){ document.getElementById('grid-title').textContent = `Results for "${searchQuery}"`; return; }
+  document.getElementById('grid-title').textContent = activeCategory === 'All' ? 'All products' : activeCategory;
 }
 function renderGrid(){
   const grid = document.getElementById('product-grid');
-  const items = ALL_PRODUCTS.filter(p => activeCategory === 'All' || p.category === activeCategory);
+  let items = ALL_PRODUCTS.filter(p => activeCategory === 'All' || p.category === activeCategory);
+  if(searchQuery) items = items.filter(p => p.name.toLowerCase().includes(searchQuery) || p.category.toLowerCase().includes(searchQuery));
+
   if(!items.length){
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><h4>No products yet</h4><p>Check back soon.</p></div>`;
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <h4>No products found</h4><p>${searchQuery ? 'Try a different search.' : 'Check back soon.'}</p>
+    </div>`;
     return;
   }
   grid.innerHTML = items.map(p => `
     <div class="product-card ${p.inStock ? '' : 'oos'}" onclick="${p.inStock ? `openProduct(${p.id})` : ''}">
-      <div class="product-thumb" style="background:linear-gradient(160deg, ${swatchFor(p.id)[0]}33, ${swatchFor(p.id)[1]}22);">
+      <div class="product-thumb">
         ${p.inStock ? '' : '<div class="oos-tag">OUT OF STOCK</div>'}
         ${productVisual(p)}
         ${p.inStock ? `<button class="quick-add" onclick="event.stopPropagation(); quickAdd(${p.id})">+</button>` : ''}
@@ -553,8 +721,6 @@ function renderGrid(){
 function openProduct(id){
   activeProduct = ALL_PRODUCTS.find(p => p.id === id);
   modalQty = 1;
-  const [c1, c2] = swatchFor(activeProduct.id);
-  document.getElementById('pm-visual').style.background = `linear-gradient(155deg, ${c1}55 0%, ${c2}33 100%)`;
   document.getElementById('pm-visual').innerHTML = productVisual(activeProduct);
   document.getElementById('pm-cat').textContent = activeProduct.category;
   document.getElementById('pm-title').textContent = activeProduct.name;
@@ -618,7 +784,7 @@ function renderCart(){
   }
   list.innerHTML = entries.map(i => `
     <div class="cart-item">
-      <div class="cart-thumb" style="background:linear-gradient(160deg, ${swatchFor(i.product.id)[0]}33, ${swatchFor(i.product.id)[1]}22);">${productVisual(i.product)}</div>
+      <div class="cart-thumb">${productVisual(i.product)}</div>
       <div class="cart-item-body">
         <div><div class="cart-item-name">${i.product.name}</div><div class="cart-item-cat">${i.product.category}</div></div>
         <div class="cart-item-bottom">
@@ -649,18 +815,15 @@ function setMethod(m){
   document.getElementById('co-zone-field').style.display = m==='delivery' ? 'block' : 'none';
   renderCheckoutTotals();
 }
-
 function onZoneChange(){
   selectedZoneId = document.getElementById('co-zone').value || null;
   renderCheckoutTotals();
 }
-
 function currentDeliveryFee(){
   if(deliveryMethod !== 'delivery' || !selectedZoneId) return 0;
   const zone = ALL_ZONES.find(z => String(z.id) === String(selectedZoneId));
   return zone ? zone.fee : 0;
 }
-
 function renderCheckoutTotals(){
   const subtotal = cartSubtotal();
   const fee = currentDeliveryFee();
@@ -688,7 +851,7 @@ function openCheckout(){
     zoneSelect.innerHTML = `<option value="">No delivery locations set up — choose pickup instead</option>`;
     selectedZoneId = null;
   }
-  setMethod(deliveryMethod); // re-applies visibility + recalculates totals for the current method
+  setMethod(deliveryMethod);
   closeOverlay('cart');
   openOverlay('checkout');
 }
@@ -736,9 +899,6 @@ async function placeOrder(){
 
   try{
     if(paymentsEnabled){
-      // Real payment: hand off to Paystack. The buyer's browser leaves this
-      // page entirely and comes back to this same URL afterward — nothing
-      // left to do here once the redirect happens.
       const callbackUrl = `${window.location.origin}${window.location.pathname}?business=${BUSINESS_ID}`;
       const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/checkout/initialize`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -750,8 +910,6 @@ async function placeOrder(){
       return;
     }
 
-    // Manual flow: order is created immediately, payment confirmed later
-    // by the seller themselves.
     const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/orders`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
     });
@@ -771,10 +929,6 @@ async function placeOrder(){
   }
 }
 
-// Shared by both the manual order flow and the post-payment verify flow —
-// each product's price is included right in order.items now, so this
-// never needs to reach back into the in-memory cart (which is empty/gone
-// after a real payment, since the browser fully left and came back).
 function showConfirmation(order){
   document.getElementById('order-number').textContent = order.id;
   document.getElementById('confirm-items').innerHTML = order.items.map(i =>
@@ -784,19 +938,15 @@ function showConfirmation(order){
     document.getElementById('confirm-items').innerHTML += `<div class="receipt-row"><span>Delivery fee</span><span class="val">${money(order.deliveryFee)}</span></div>`;
   }
   document.getElementById('cf-total').textContent = money(order.amount);
+  document.getElementById('cf-payment-note').textContent = order.paymentStatus === 'Paid' ? 'Paid ✓' : 'Awaiting — pay via transfer on confirmation';
   openOverlay('confirm');
 }
 
-// Runs once on page load. If the buyer just got redirected back from
-// Paystack, the URL will have a ?reference= (or ?trxref=) on it — verify
-// that payment actually succeeded before showing anything as confirmed.
 async function checkForPaymentReturn(){
   const params = new URLSearchParams(window.location.search);
   const reference = params.get('reference') || params.get('trxref');
   if(!reference) return;
 
-  // Clean the reference out of the URL immediately so a page refresh
-  // later doesn't try to re-verify (or re-trigger anything) endlessly.
   window.history.replaceState({}, '', `${window.location.pathname}?business=${BUSINESS_ID}`);
 
   showStatus('Confirming your payment…', false);
@@ -826,18 +976,9 @@ function toast(msg){
   window._toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
 }
 
-async function loadDeliveryZones(){
-  try{
-    const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/delivery-zones`);
-    if(!res.ok) throw new Error();
-    ALL_ZONES = await res.json();
-  } catch(err){
-    ALL_ZONES = [];
-  }
-}
-
 (async function init(){
   await Promise.all([loadStore(), loadProducts(), loadDeliveryZones()]);
+  renderTrustStrip();
   checkForPaymentReturn();
 })();
 </script>
