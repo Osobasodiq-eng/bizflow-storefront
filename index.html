@@ -331,6 +331,7 @@
 
         <div class="field"><label>Full name</label><input id="co-name" type="text" placeholder="e.g. Amaka Obi"></div>
         <div class="field"><label>Phone number</label><input id="co-phone" type="text" placeholder="e.g. 0803 210 4477"></div>
+        <div class="field" id="co-email-field"><label>Email</label><input id="co-email" type="email" placeholder="e.g. amaka@email.com"></div>
         <div class="field" id="co-zone-field">
           <label>Delivery location</label>
           <select id="co-zone" class="modal-input" onchange="onZoneChange()" style="width:100%;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit;background:var(--paper);"></select>
@@ -425,6 +426,7 @@ let activeCategory = 'All';
 let activeProduct = null;
 let modalQty = 1;
 let deliveryMethod = 'delivery';
+let paymentsEnabled = false;
 
 function money(n){ return '₦' + Number(n).toLocaleString('en-NG'); }
 
@@ -472,6 +474,7 @@ async function loadStore(){
     const store = await res.json();
 
     applyTheme(store.theme);
+    paymentsEnabled = !!store.paymentsEnabled;
 
     document.getElementById('brand-name').textContent = store.name;
     document.getElementById('hero-title').textContent = store.name;
@@ -661,10 +664,15 @@ function currentDeliveryFee(){
 function renderCheckoutTotals(){
   const subtotal = cartSubtotal();
   const fee = currentDeliveryFee();
+  const total = subtotal + fee;
   document.getElementById('co-subtotal').textContent = money(subtotal);
   document.getElementById('co-delivery-fee').textContent = money(fee);
   document.getElementById('co-delivery-fee-row').style.display = deliveryMethod === 'delivery' ? 'flex' : 'none';
-  document.getElementById('co-total').textContent = money(subtotal + fee);
+  document.getElementById('co-total').textContent = money(total);
+
+  const btn = document.getElementById('co-submit-btn');
+  btn.textContent = paymentsEnabled ? `Pay ${money(total)}` : 'Place order';
+  document.getElementById('co-email-field').style.display = paymentsEnabled ? 'block' : 'none';
 }
 
 function openCart(){ renderCart(); openOverlay('cart'); }
@@ -688,11 +696,17 @@ function openCheckout(){
 async function placeOrder(){
   const name = document.getElementById('co-name').value.trim();
   const phone = document.getElementById('co-phone').value.trim();
+  const email = document.getElementById('co-email').value.trim();
   const address = document.getElementById('co-address').value.trim();
   const errorEl = document.getElementById('co-error');
 
   if(!name || !phone){
     errorEl.textContent = 'Name and phone number are required.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if(paymentsEnabled && !email){
+    errorEl.textContent = 'Email is required to pay online.';
     errorEl.style.display = 'block';
     return;
   }
@@ -710,46 +724,91 @@ async function placeOrder(){
 
   const btn = document.getElementById('co-submit-btn');
   btn.disabled = true;
-  btn.textContent = 'Placing order…';
+  btn.textContent = paymentsEnabled ? 'Redirecting to payment…' : 'Placing order…';
 
   const zoneName = deliveryMethod === 'delivery' ? ALL_ZONES.find(z => String(z.id) === String(selectedZoneId))?.locationName : null;
   const body = {
     items: Object.values(cart).map(i => ({ productId: i.product.id, qty: i.qty })),
-    customer: { name, phone, location: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup' },
+    customer: { name, phone, email: email || undefined, location: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup' },
     delivery: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup at store',
     deliveryZoneId: deliveryMethod === 'delivery' ? selectedZoneId : null,
   };
 
   try{
+    if(paymentsEnabled){
+      // Real payment: hand off to Paystack. The buyer's browser leaves this
+      // page entirely and comes back to this same URL afterward — nothing
+      // left to do here once the redirect happens.
+      const callbackUrl = `${window.location.origin}${window.location.pathname}?business=${BUSINESS_ID}`;
+      const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/checkout/initialize`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, callbackUrl })
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'Could not start payment');
+      window.location.href = data.authorizationUrl;
+      return;
+    }
+
+    // Manual flow: order is created immediately, payment confirmed later
+    // by the seller themselves.
     const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/orders`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
     });
     const order = await res.json();
     if(!res.ok) throw new Error(order.error || 'Could not place order');
 
-    document.getElementById('order-number').textContent = order.id;
-    document.getElementById('confirm-items').innerHTML = order.items.map(i => {
-      const cartEntry = cart[i.productId];
-      const lineTotal = cartEntry ? cartEntry.product.price * i.qty : 0;
-      return `<div class="receipt-row"><span>${i.qty}× ${i.name}</span><span class="val">${money(lineTotal)}</span></div>`;
-    }).join('');
-    if(order.deliveryFee > 0){
-      document.getElementById('confirm-items').innerHTML += `<div class="receipt-row"><span>Delivery fee</span><span class="val">${money(order.deliveryFee)}</span></div>`;
-    }
-    document.getElementById('cf-total').textContent = money(order.amount);
-
     cart = {};
     refreshCartBadge();
     closeOverlay('checkout');
-    openOverlay('confirm');
-    // refresh product list so stock levels reflect the sale just made
+    showConfirmation(order);
     loadProducts();
   } catch(err){
     errorEl.textContent = err.message;
     errorEl.style.display = 'block';
-  } finally {
     btn.disabled = false;
-    btn.textContent = 'Place order';
+    btn.textContent = paymentsEnabled ? `Pay ${money(cartSubtotal() + currentDeliveryFee())}` : 'Place order';
+  }
+}
+
+// Shared by both the manual order flow and the post-payment verify flow —
+// each product's price is included right in order.items now, so this
+// never needs to reach back into the in-memory cart (which is empty/gone
+// after a real payment, since the browser fully left and came back).
+function showConfirmation(order){
+  document.getElementById('order-number').textContent = order.id;
+  document.getElementById('confirm-items').innerHTML = order.items.map(i =>
+    `<div class="receipt-row"><span>${i.qty}× ${i.name}</span><span class="val">${money(i.price * i.qty)}</span></div>`
+  ).join('');
+  if(order.deliveryFee > 0){
+    document.getElementById('confirm-items').innerHTML += `<div class="receipt-row"><span>Delivery fee</span><span class="val">${money(order.deliveryFee)}</span></div>`;
+  }
+  document.getElementById('cf-total').textContent = money(order.amount);
+  openOverlay('confirm');
+}
+
+// Runs once on page load. If the buyer just got redirected back from
+// Paystack, the URL will have a ?reference= (or ?trxref=) on it — verify
+// that payment actually succeeded before showing anything as confirmed.
+async function checkForPaymentReturn(){
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get('reference') || params.get('trxref');
+  if(!reference) return;
+
+  // Clean the reference out of the URL immediately so a page refresh
+  // later doesn't try to re-verify (or re-trigger anything) endlessly.
+  window.history.replaceState({}, '', `${window.location.pathname}?business=${BUSINESS_ID}`);
+
+  showStatus('Confirming your payment…', false);
+  try{
+    const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/checkout/verify/${encodeURIComponent(reference)}`);
+    const order = await res.json();
+    if(!res.ok) throw new Error(order.error || 'Could not confirm payment');
+    hideStatus();
+    showConfirmation(order);
+    loadProducts();
+  } catch(err){
+    showStatus(`We couldn't confirm your payment: ${err.message}. If you were charged, contact the seller.`, true);
   }
 }
 
@@ -777,9 +836,10 @@ async function loadDeliveryZones(){
   }
 }
 
-loadStore();
-loadProducts();
-loadDeliveryZones();
+(async function init(){
+  await Promise.all([loadStore(), loadProducts(), loadDeliveryZones()]);
+  checkForPaymentReturn();
+})();
 </script>
 
 </body>
