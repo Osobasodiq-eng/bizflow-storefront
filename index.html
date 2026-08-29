@@ -253,6 +253,11 @@
   .pm-spec-row span:first-child{ color:var(--text-soft); }
   .pm-spec-row span:last-child{ font-weight:600; text-align:right; }
   .pm-oos-note{ font-size:13px; color:var(--red); margin-bottom:18px; font-weight:600; }
+  .variant-label{ font-size:12.5px; font-weight:700; margin-bottom:9px; }
+  .variant-row{ display:flex; gap:9px; margin-bottom:18px; flex-wrap:wrap; }
+  .variant-chip{ padding:9px 15px; border-radius:10px; border:1.5px solid var(--border); font-size:13px; font-weight:600; cursor:pointer; background:var(--surface); color:var(--text); }
+  .variant-chip.active{ border-color:var(--brand); background:var(--brand-tint); color:var(--brand); }
+  .variant-chip.oos{ opacity:0.4; cursor:not-allowed; text-decoration:line-through; }
 
   .stepper{ display:flex; align-items:center; gap:14px; border:1px solid var(--border); border-radius:13px; padding:10px 16px; width:fit-content; margin-bottom:18px; }
   .step-btn{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; font-weight:600; user-select:none; }
@@ -399,6 +404,7 @@
         <div class="pm-price" id="pm-price">₦0</div>
         <div class="pm-desc" id="pm-desc"></div>
         <div id="pm-specs"></div>
+        <div id="pm-variants"></div>
         <div class="pm-oos-note" id="pm-oos-note" style="display:none;">Currently out of stock</div>
         <div class="stepper" id="pm-stepper">
           <div class="step-btn" onclick="changeQty(-1)">−</div>
@@ -781,13 +787,15 @@ function renderGrid(){
   `).join('');
 }
 
+let selectedVariant = null; // the variant object currently chosen in the product modal, or null
+
 function openProduct(id){
   activeProduct = ALL_PRODUCTS.find(p => p.id === id);
   modalQty = 1;
+  selectedVariant = null;
   document.getElementById('pm-visual').innerHTML = productVisual(activeProduct);
   document.getElementById('pm-cat').textContent = activeProduct.category;
   document.getElementById('pm-title').textContent = activeProduct.name;
-  document.getElementById('pm-price').textContent = money(activeProduct.price);
   document.getElementById('pm-desc').textContent = activeProduct.description || '';
   document.getElementById('pm-desc').style.display = activeProduct.description ? 'block' : 'none';
 
@@ -796,35 +804,81 @@ function openProduct(id){
     ? `<div class="pm-specs">${specs.map(s => `<div class="pm-spec-row"><span>${s.label}</span><span>${s.value}</span></div>`).join('')}</div>`
     : '';
 
+  const variants = activeProduct.variants || [];
+  document.getElementById('pm-price').textContent = money(activeProduct.price);
+  if(variants.length){
+    document.getElementById('pm-variants').innerHTML = `
+      <div class="variant-label">Size</div>
+      <div class="variant-row">${variants.map(v =>
+        `<div class="variant-chip ${v.inStock ? '' : 'oos'}" onclick="${v.inStock ? `selectVariant(${v.id})` : ''}" data-variant-id="${v.id}">${v.label}</div>`
+      ).join('')}</div>`;
+    // Auto-pick the first in-stock size so price/state reflect something real immediately.
+    const firstAvailable = variants.find(v => v.inStock);
+    if(firstAvailable) selectVariant(firstAvailable.id);
+    else updateProductModalState();
+  } else {
+    document.getElementById('pm-variants').innerHTML = '';
+    updateProductModalState();
+  }
+
   document.getElementById('pm-qty').textContent = modalQty;
-  document.getElementById('pm-oos-note').style.display = activeProduct.inStock ? 'none' : 'block';
-  document.getElementById('pm-stepper').style.display = activeProduct.inStock ? 'flex' : 'none';
-  const addBtn = document.getElementById('pm-add-btn');
-  addBtn.disabled = !activeProduct.inStock;
-  addBtn.textContent = activeProduct.inStock ? 'Add to cart' : 'Out of stock';
   openOverlay('product');
+}
+
+function selectVariant(variantId){
+  const variants = activeProduct.variants || [];
+  selectedVariant = variants.find(v => v.id === variantId) || null;
+  document.querySelectorAll('#pm-variants .variant-chip').forEach(el => {
+    el.classList.toggle('active', String(el.dataset.variantId) === String(variantId));
+  });
+  if(selectedVariant) document.getElementById('pm-price').textContent = money(selectedVariant.price);
+  updateProductModalState();
+}
+
+// Centralizes the "can this actually be added to cart right now" logic,
+// since it now depends on whether a product has sizes, and if so, whether
+// one is selected and that specific size is in stock.
+function updateProductModalState(){
+  const variants = activeProduct.variants || [];
+  const needsSelection = variants.length > 0;
+  const inStockNow = needsSelection ? !!(selectedVariant && selectedVariant.inStock) : activeProduct.inStock;
+
+  document.getElementById('pm-oos-note').style.display = (!needsSelection && !activeProduct.inStock) ? 'block' : 'none';
+  document.getElementById('pm-stepper').style.display = inStockNow ? 'flex' : 'none';
+
+  const addBtn = document.getElementById('pm-add-btn');
+  addBtn.disabled = !inStockNow;
+  addBtn.textContent = needsSelection && !selectedVariant ? 'Select a size'
+    : inStockNow ? 'Add to cart' : 'Out of stock';
 }
 function changeQty(delta){
   modalQty = Math.max(1, modalQty + delta);
   document.getElementById('pm-qty').textContent = modalQty;
 }
 function addToCartFromModal(){
-  addToCart(activeProduct, modalQty);
+  addToCart(activeProduct, modalQty, selectedVariant);
   closeOverlay('product');
 }
 function quickAdd(id){
   const p = ALL_PRODUCTS.find(x => x.id === id);
-  addToCart(p, 1);
+  if((p.variants || []).length){ openProduct(id); return; } // can't quick-add without picking a size
+  addToCart(p, 1, null);
 }
-function addToCart(product, qty){
-  if(cart[product.id]) cart[product.id].qty += qty;
-  else cart[product.id] = { product, qty };
+function addToCart(product, qty, variant){
+  const key = product.id + (variant ? '-' + variant.id : '');
+  if(cart[key]) cart[key].qty += qty;
+  else cart[key] = {
+    product, qty,
+    variantId: variant ? variant.id : null,
+    variantLabel: variant ? variant.label : null,
+    unitPrice: variant ? variant.price : product.price,
+  };
   refreshCartBadge();
-  toast(`Added ${product.name} to cart`);
+  toast(`Added ${product.name}${variant ? ` (${variant.label})` : ''} to cart`);
 }
 
 function cartCount(){ return Object.values(cart).reduce((s,i)=>s+i.qty,0); }
-function cartSubtotal(){ return Object.values(cart).reduce((s,i)=>s+i.qty*i.product.price,0); }
+function cartSubtotal(){ return Object.values(cart).reduce((s,i)=>s+i.qty*i.unitPrice,0); }
 function refreshCartBadge(){
   const n = cartCount();
   const badge = document.getElementById('cart-badge');
@@ -836,7 +890,7 @@ function refreshCartBadge(){
 function renderCart(){
   const list = document.getElementById('cart-list');
   const foot = document.getElementById('cart-foot');
-  const entries = Object.values(cart);
+  const entries = Object.entries(cart);
   if(!entries.length){
     list.innerHTML = `<div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L4.5 2H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
@@ -845,18 +899,18 @@ function renderCart(){
     foot.style.display = 'none';
     return;
   }
-  list.innerHTML = entries.map(i => `
+  list.innerHTML = entries.map(([key, i]) => `
     <div class="cart-item">
       <div class="cart-thumb">${productVisual(i.product)}</div>
       <div class="cart-item-body">
-        <div><div class="cart-item-name">${i.product.name}</div><div class="cart-item-cat">${i.product.category}</div></div>
+        <div><div class="cart-item-name">${i.product.name}</div><div class="cart-item-cat">${i.variantLabel ? i.variantLabel : i.product.category}</div></div>
         <div class="cart-item-bottom">
           <div class="mini-stepper">
-            <div class="mini-step-btn" onclick="cartQty(${i.product.id},-1)">−</div>
+            <div class="mini-step-btn" onclick="cartQty('${key}',-1)">−</div>
             <div class="step-val">${i.qty}</div>
-            <div class="mini-step-btn" onclick="cartQty(${i.product.id},1)">+</div>
+            <div class="mini-step-btn" onclick="cartQty('${key}',1)">+</div>
           </div>
-          <div class="cart-item-price">${money(i.product.price*i.qty)}</div>
+          <div class="cart-item-price">${money(i.unitPrice*i.qty)}</div>
         </div>
       </div>
     </div>
@@ -864,9 +918,9 @@ function renderCart(){
   document.getElementById('sum-total').textContent = money(cartSubtotal());
   foot.style.display = 'block';
 }
-function cartQty(id, delta){
-  cart[id].qty += delta;
-  if(cart[id].qty <= 0) delete cart[id];
+function cartQty(key, delta){
+  cart[key].qty += delta;
+  if(cart[key].qty <= 0) delete cart[key];
   refreshCartBadge();
 }
 
@@ -954,7 +1008,7 @@ async function placeOrder(){
 
   const zoneName = deliveryMethod === 'delivery' ? ALL_ZONES.find(z => String(z.id) === String(selectedZoneId))?.locationName : null;
   const body = {
-    items: Object.values(cart).map(i => ({ productId: i.product.id, qty: i.qty })),
+    items: Object.values(cart).map(i => ({ productId: i.product.id, qty: i.qty, variantId: i.variantId || undefined })),
     customer: { name, phone, email: email || undefined, location: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup' },
     delivery: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup at store',
     deliveryZoneId: deliveryMethod === 'delivery' ? selectedZoneId : null,
@@ -995,7 +1049,7 @@ async function placeOrder(){
 function showConfirmation(order){
   document.getElementById('order-number').textContent = order.id;
   document.getElementById('confirm-items').innerHTML = order.items.map(i =>
-    `<div class="receipt-row"><span>${i.qty}× ${i.name}</span><span class="val">${money(i.price * i.qty)}</span></div>`
+    `<div class="receipt-row"><span>${i.qty}× ${i.name}${i.variantLabel ? ` (${i.variantLabel})` : ''}</span><span class="val">${money(i.price * i.qty)}</span></div>`
   ).join('');
   if(order.deliveryFee > 0){
     document.getElementById('confirm-items').innerHTML += `<div class="receipt-row"><span>Delivery fee</span><span class="val">${money(order.deliveryFee)}</span></div>`;
