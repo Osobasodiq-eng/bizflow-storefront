@@ -439,7 +439,7 @@
 
         <div class="field"><label>Full name</label><input id="co-name" type="text" placeholder="e.g. Amaka Obi"></div>
         <div class="field"><label>Phone number</label><input id="co-phone" type="text" placeholder="e.g. 0803 210 4477"></div>
-        <div class="field" id="co-email-field"><label>Email</label><input id="co-email" type="email" placeholder="e.g. amaka@email.com"></div>
+        <div class="field" id="co-email-field"><label>Email</label><input id="co-email" type="email" placeholder="e.g. amaka@email.com"><div style="font-size:11px;color:var(--text-soft);margin-top:5px;">We'll send order updates here.</div></div>
         <div class="field" id="co-zone-field">
           <label>Delivery location</label>
           <select id="co-zone" onchange="onZoneChange()" style="width:100%;border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit;background:var(--surface-2);color:var(--text);"></select>
@@ -959,7 +959,7 @@ function renderCheckoutTotals(){
 
   const btn = document.getElementById('co-submit-btn');
   btn.textContent = paymentsEnabled ? `Pay ${money(total)}` : 'Place order';
-  document.getElementById('co-email-field').style.display = paymentsEnabled ? 'block' : 'none';
+  document.getElementById('co-email-field').style.display = 'block';
 }
 
 function openCart(){ renderCart(); openOverlay('cart'); }
@@ -992,8 +992,8 @@ async function placeOrder(){
     errorEl.style.display = 'block';
     return;
   }
-  if(paymentsEnabled && !email){
-    errorEl.textContent = 'Email is required to pay online.';
+  if(!email){
+    errorEl.textContent = 'Email is required so we can send you order updates.';
     errorEl.style.display = 'block';
     return;
   }
