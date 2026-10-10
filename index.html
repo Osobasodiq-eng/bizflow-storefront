@@ -439,7 +439,7 @@
 
         <div class="field"><label>Full name</label><input id="co-name" type="text" placeholder="e.g. Amaka Obi"></div>
         <div class="field"><label>Phone number</label><input id="co-phone" type="text" placeholder="e.g. 0803 210 4477"></div>
-        <div class="field" id="co-email-field"><label>Email</label><input id="co-email" type="email" placeholder="e.g. amaka@email.com"><div style="font-size:11px;color:var(--text-soft);margin-top:5px;">We'll send order updates here.</div></div>
+        <div class="field" id="co-email-field"><label>Email</label><input id="co-email" type="email" placeholder="e.g. amaka@email.com"><div style="font-size:11px;color:var(--text-soft);margin-top:5px;">We'll send order updates here, and occasional offers from this store (unsubscribe anytime).</div></div>
         <div class="field" id="co-zone-field">
           <label>Delivery location</label>
           <select id="co-zone" onchange="onZoneChange()" style="width:100%;border:1px solid var(--border);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:inherit;background:var(--surface-2);color:var(--text);"></select>
@@ -487,6 +487,15 @@
 <script>
 const API_BASE = 'https://bizflow-api-v0sd.onrender.com';
 const BUSINESS_ID = new URLSearchParams(window.location.search).get('business');
+// Marketing attribution: a "Shop now" link in a campaign email carries ?c=<campaign id>.
+// Remembered for this visit so the order is credited to that campaign at checkout.
+const CAMPAIGN_ID = (function(){
+  try{
+    var c = new URLSearchParams(window.location.search).get('c');
+    if(c && /^\d+$/.test(c)) sessionStorage.setItem('kooza_campaign_'+BUSINESS_ID, c);
+    return sessionStorage.getItem('kooza_campaign_'+BUSINESS_ID) || undefined;
+  }catch(e){ return undefined; }
+})();
 
 if(!BUSINESS_ID){
   document.body.innerHTML = `<div style="max-width:420px; margin:80px auto; text-align:center; font-family:sans-serif; padding:0 20px;">
@@ -1019,6 +1028,7 @@ async function placeOrder(){
     customer: { name, phone, email: email || undefined, location: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup' },
     delivery: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup at store',
     deliveryZoneId: deliveryMethod === 'delivery' ? selectedZoneId : null,
+    campaignId: CAMPAIGN_ID,
   };
 
   try{
