@@ -1117,5 +1117,85 @@ function toast(msg){
 })();
 </script>
 
+
+<!-- ===== Message us (chat with the store; replies come from the merchant's Kooza inbox) ===== -->
+<style>
+  .kc-fab{position:fixed;right:18px;bottom:18px;z-index:900;display:flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:none;border-radius:28px;padding:12px 18px;font:600 14px 'DM Sans',system-ui,sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+  .kc-fab:hover{background:var(--brand-dark)}
+  .kc-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #fff;display:none}
+  .kc-panel{position:fixed;right:18px;bottom:78px;z-index:901;width:min(360px,calc(100vw - 24px));max-height:min(520px,calc(100vh - 110px));background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.28);display:none;flex-direction:column;overflow:hidden;font-family:'DM Sans',system-ui,sans-serif;color:#1f2937}
+  .kc-panel.open{display:flex}
+  .kc-head{background:var(--brand);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+  .kc-head b{font-size:15px}.kc-head small{display:block;opacity:.8;font-size:12px;margin-top:2px}
+  .kc-x{background:none;border:none;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 4px}
+  .kc-body{flex:1;overflow:auto;padding:14px;background:#f7f7f5;display:flex;flex-direction:column;gap:8px;min-height:140px}
+  .kc-m{max-width:82%;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+  .kc-m.you{align-self:flex-end;background:var(--brand);color:#fff}.kc-m.store{align-self:flex-start;background:#fff;border:1px solid #e5e7eb}
+  .kc-form{border-top:1px solid #eee;padding:10px;display:flex;flex-direction:column;gap:8px;background:#fff}
+  .kc-form input,.kc-form textarea{border:1px solid #d9dde3;border-radius:10px;padding:9px 11px;font:14px 'DM Sans',system-ui,sans-serif;width:100%;box-sizing:border-box}
+  .kc-row{display:flex;gap:8px;align-items:flex-end}.kc-row textarea{flex:1;resize:none;min-height:40px;max-height:100px}
+  .kc-send{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 16px;font:600 14px 'DM Sans',system-ui,sans-serif;cursor:pointer}
+  .kc-send:disabled{opacity:.5}
+  .kc-note{font-size:12px;color:#6b7280}.kc-err{font-size:12px;color:#b91c1c}
+</style>
+<button class="kc-fab" id="kc-fab" aria-label="Message the store" style="display:none"><span style="font-size:17px" aria-hidden="true">💬</span> Message us<span class="kc-dot" id="kc-dot"></span></button>
+<div class="kc-panel" id="kc-panel" role="dialog" aria-label="Chat with the store">
+  <div class="kc-head"><div><b id="kc-title">Message us</b><small>We usually reply within a few hours</small></div><button class="kc-x" id="kc-close" aria-label="Close chat">×</button></div>
+  <div class="kc-body" id="kc-body"></div>
+  <div class="kc-form">
+    <div id="kc-intro">
+      <input id="kc-name" placeholder="Your name (optional)" maxlength="60" style="margin-bottom:8px">
+      <input id="kc-contact" placeholder="Phone or email so we can reach you (optional)" maxlength="80">
+    </div>
+    <div class="kc-row"><textarea id="kc-text" rows="1" maxlength="1000" placeholder="Type your message…"></textarea><button class="kc-send" id="kc-send">Send</button></div>
+    <div class="kc-err" id="kc-err"></div>
+  </div>
+</div>
+<script>
+(function(){
+  if (typeof BUSINESS_ID === 'undefined' || !BUSINESS_ID) return;
+  var KEY = 'kooza_chat_' + BUSINESS_ID, token = null, seen = 0, timer = null, count = 0;
+  try { token = localStorage.getItem(KEY); } catch (e) {}
+  var $ = function(id){ return document.getElementById(id); };
+  $('kc-fab').style.display = 'flex';
+  function render(msgs){
+    var body = $('kc-body');
+    if (!msgs.length) { body.innerHTML = '<div class="kc-note" style="text-align:center;margin:auto">Hi 👋 Ask us anything about our products, delivery or your order.</div>'; return; }
+    body.innerHTML = '';
+    msgs.forEach(function(m){ var d = document.createElement('div'); d.className = 'kc-m ' + m.from; d.textContent = m.text; body.appendChild(d); });
+    body.scrollTop = body.scrollHeight;
+  }
+  function load(){
+    if (!token) { render([]); return Promise.resolve(); }
+    return fetch(API_BASE + '/api/chat/' + BUSINESS_ID + '/' + token).then(function(r){ return r.json(); }).then(function(d){
+      var msgs = d.messages || []; count = msgs.length;
+      var fromStore = msgs.filter(function(m){ return m.from === 'store'; }).length;
+      if ($('kc-panel').classList.contains('open')) { seen = fromStore; render(msgs); $('kc-dot').style.display = 'none'; }
+      else $('kc-dot').style.display = fromStore > seen ? 'block' : 'none';
+      $('kc-intro').style.display = msgs.length ? 'none' : 'block';
+    }).catch(function(){});
+  }
+  function open(){ $('kc-panel').classList.add('open'); load().then(function(){ var b = $('kc-body'); b.scrollTop = b.scrollHeight; }); clearInterval(timer); timer = setInterval(load, 8000); }
+  function close(){ $('kc-panel').classList.remove('open'); clearInterval(timer); timer = token ? setInterval(load, 45000) : null; }
+  $('kc-fab').onclick = function(){ $('kc-panel').classList.contains('open') ? close() : open(); };
+  $('kc-close').onclick = close;
+  function send(){
+    var text = $('kc-text').value.trim(); if (!text) return;
+    var btn = $('kc-send'), err = $('kc-err'); err.textContent = ''; btn.disabled = true;
+    fetch(API_BASE + '/api/chat/' + BUSINESS_ID, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, token: token, name: $('kc-name').value, contact: $('kc-contact').value }) })
+      .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+      .then(function(x){
+        if (!x.ok) { err.textContent = x.d.error || 'Could not send. Please try again.'; return; }
+        token = x.d.token; try { localStorage.setItem(KEY, token); } catch (e) {}
+        $('kc-text').value = ''; return load();
+      }).catch(function(){ err.textContent = 'No connection. Please try again.'; })
+      .then(function(){ btn.disabled = false; });
+  }
+  $('kc-send').onclick = send;
+  $('kc-text').onkeydown = function(e){ if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
+  if (token) { load(); timer = setInterval(load, 45000); }
+})();
+</script>
 </body>
 </html>
