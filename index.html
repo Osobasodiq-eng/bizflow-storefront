@@ -308,6 +308,7 @@ dialog::backdrop{background:rgba(8,12,30,.55)}
     <div class="pp" id="pm-price">₦0</div>
     <p class="desc" id="pm-desc"></p>
     <div id="pm-specs"></div>
+    <div id="pm-options" style="display:grid;gap:14px"></div>
     <div id="pm-variants"></div>
     <div class="oosnote" id="pm-oos-note" style="display:none">Currently out of stock</div>
     <div class="qty" id="pm-stepper"><button onclick="changeQty(-1)" aria-label="Less">−</button><span id="pm-qty">1</span><button onclick="changeQty(1)" aria-label="More">+</button></div>
@@ -473,6 +474,7 @@ let sortMode = 'new';
 let activeProduct = null;
 let modalQty = 1;
 let selectedVariant = null;
+let selectedOptions = {};
 let deliveryMethod = 'delivery';
 let paymentsEnabled = false;
 
@@ -488,6 +490,28 @@ function placeholder(p){
 function productVisual(p){
   if(p.imageUrl) return `<img src="${esc(p.imageUrl)}" alt="${esc(p.name)}" loading="lazy">`;
   return placeholder(p);
+}
+// Merchants often list sizes/colours as repeated spec rows ("Size 43", "Size 44"…) or as a
+// comma list ("Colour: Black, Brown"). Turn those into choices the buyer picks from; every
+// other spec row stays a plain fact.
+function parseOptions(p){
+  const specs = (p.specifications || []).filter(s => s && s.label != null && String(s.value||'').trim() !== '');
+  const byLabel = {};
+  specs.forEach(s => { const k = String(s.label).trim().toLowerCase(); (byLabel[k] = byLabel[k] || []).push(s); });
+  const groups = [], facts = [], done = {};
+  specs.forEach(s => {
+    const k = String(s.label).trim().toLowerCase();
+    if(done[k]) return;
+    const rows = byLabel[k];
+    let values = [];
+    if(rows.length > 1) values = rows.map(r => String(r.value).trim());
+    else if(/^(sizes?|colou?rs?)$/.test(k) && /[,\/|]/.test(String(s.value))) values = String(s.value).split(/[,\/|]/).map(v => v.trim());
+    values = values.filter((v,i) => v && values.indexOf(v) === i);
+    if(values.length > 1){ done[k] = true; groups.push({ label: String(s.label).trim(), values }); }
+    else if(rows.length === 1) facts.push(s);
+    else { done[k] = true; facts.push(rows[0]); }
+  });
+  return { groups, facts };
 }
 function priceRange(p){
   const vs = (p.variants || []).filter(v => v.price != null);
@@ -749,14 +773,19 @@ function openProduct(id){
   $('pm-desc').textContent = activeProduct.description || '';
   $('pm-desc').style.display = activeProduct.description ? 'block' : 'none';
 
-  const specs = activeProduct.specifications || [];
-  $('pm-specs').innerHTML = specs.length
-    ? `<div class="specs">${specs.map(s => `<div><span>${esc(s.label)}</span><span>${esc(s.value)}</span></div>`).join('')}</div>` : '';
+  selectedOptions = {};
+  const parsed = parseOptions(activeProduct);
+  activeProduct._optGroups = parsed.groups;
+  $('pm-specs').innerHTML = parsed.facts.length
+    ? `<div class="specs">${parsed.facts.map(s => `<div><span>${esc(s.label)}</span><span>${esc(s.value)}</span></div>`).join('')}</div>` : '';
+  $('pm-options').innerHTML = parsed.groups.map((g,gi) =>
+    `<div><div class="lbl">${esc(g.label)}</div><div class="sizes">${g.values.map((v,vi) =>
+      `<button aria-pressed="false" data-g="${gi}" data-v="${vi}" onclick="selectOption(${gi},${vi})">${esc(v)}</button>`).join('')}</div></div>`).join('');
 
   const variants = activeProduct.variants || [];
   $('pm-price').textContent = priceRange(activeProduct);
   if(variants.length){
-    $('pm-variants').innerHTML = `<div class="lbl">Size</div><div class="sizes">${variants.map(v =>
+    $('pm-variants').innerHTML = `<div class="lbl">${parsed.groups.some(g => /size/i.test(g.label)) ? 'Option' : 'Size'}</div><div class="sizes">${variants.map(v =>
       `<button aria-pressed="false" ${v.inStock ? '' : 'disabled'} data-variant-id="${v.id}" onclick="selectVariant(${Number(v.id)})">${esc(v.label)}</button>`).join('')}</div>`;
     const first = variants.find(v => v.inStock);
     if(first) selectVariant(first.id); else updateProductModalState();
@@ -776,40 +805,58 @@ function selectVariant(variantId){
   if(selectedVariant) $('pm-price').textContent = money(selectedVariant.price);
   updateProductModalState();
 }
+function selectOption(gi, vi){
+  const g = activeProduct._optGroups[gi];
+  selectedOptions[g.label] = g.values[vi];
+  document.querySelectorAll(`#pm-options button[data-g="${gi}"]`).forEach(b => b.setAttribute('aria-pressed', Number(b.dataset.v) === vi));
+  updateProductModalState();
+}
+function missingOption(){
+  return (activeProduct._optGroups || []).find(g => !selectedOptions[g.label]);
+}
+function chosenOptions(){
+  return (activeProduct._optGroups || []).filter(g => selectedOptions[g.label]).map(g => ({ label: g.label, value: selectedOptions[g.label] }));
+}
 function updateProductModalState(){
   const variants = activeProduct.variants || [];
   const needsSelection = variants.length > 0;
   const inStockNow = needsSelection ? !!(selectedVariant && selectedVariant.inStock) : activeProduct.inStock;
+  const missing = missingOption();
   $('pm-oos-note').style.display = (!needsSelection && !activeProduct.inStock) ? 'block' : 'none';
   $('pm-stepper').style.display = inStockNow ? 'inline-flex' : 'none';
   const addBtn = $('pm-add-btn');
-  addBtn.disabled = !inStockNow;
-  addBtn.textContent = needsSelection && !selectedVariant ? 'Select a size' : inStockNow ? 'Add to bag' : 'Out of stock';
+  addBtn.disabled = !inStockNow || !!missing;
+  addBtn.textContent = needsSelection && !selectedVariant ? 'Select a size'
+    : !inStockNow ? 'Out of stock'
+    : missing ? `Select ${missing.label.toLowerCase()}` : 'Add to bag';
 }
 function changeQty(delta){ modalQty = Math.max(1, modalQty + delta); $('pm-qty').textContent = modalQty; }
 function addToCartFromModal(){
-  addToCart(activeProduct, modalQty, selectedVariant);
+  addToCart(activeProduct, modalQty, selectedVariant, chosenOptions());
   closeOverlay('product');
 }
 function quickAdd(id){
   const p = ALL_PRODUCTS.find(x => Number(x.id) === Number(id));
   if(!p) return;
-  if((p.variants || []).length){ openProduct(id); return; } // can't quick-add without picking a size
+  if((p.variants || []).length || parseOptions(p).groups.length){ openProduct(id); return; } // needs a choice first
   addToCart(p, 1, null);
 }
 
 // ---- Bag ----
-function addToCart(product, qty, variant){
-  const key = product.id + (variant ? '-' + variant.id : '');
+function addToCart(product, qty, variant, options){
+  options = options || [];
+  const optKey = options.map(o => o.label + '=' + o.value).join('|').replace(/[^A-Za-z0-9=|_-]/g, '_');
+  const key = product.id + (variant ? '-' + variant.id : '') + (optKey ? '-' + optKey : '');
+  const optText = options.map(o => o.value).join(', ');
   if(cart[key]) cart[key].qty += qty;
   else cart[key] = {
-    product, qty,
+    product, qty, options,
     variantId: variant ? variant.id : null,
     variantLabel: variant ? variant.label : null,
     unitPrice: variant ? variant.price : product.price,
   };
   refreshCartBadge();
-  toast(`Added ${product.name}${variant ? ` (${variant.label})` : ''} to bag`);
+  toast(`Added ${product.name}${variant || optText ? ` (${[variant && variant.label, optText].filter(Boolean).join(', ')})` : ''} to bag`);
 }
 function cartCount(){ return Object.values(cart).reduce((s,i)=>s+i.qty,0); }
 function cartSubtotal(){ return Object.values(cart).reduce((s,i)=>s+i.qty*i.unitPrice,0); }
@@ -827,7 +874,7 @@ function renderCart(){
       <div class="im">${productVisual(i.product)}</div>
       <div>
         <b>${esc(i.product.name)}</b>
-        <small>${esc(i.variantLabel ? 'Size ' + i.variantLabel : (i.product.category || ''))}</small>
+        <small>${esc([i.variantLabel ? 'Size ' + i.variantLabel : '', ...(i.options||[]).map(o => o.label + ': ' + o.value)].filter(Boolean).join(' · ') || (i.product.category || ''))}</small>
         <div class="q"><button onclick="cartQty('${key}',-1)" aria-label="Less">−</button><span>${i.qty}</span><button onclick="cartQty('${key}',1)" aria-label="More">+</button></div>
         <div><button class="rm" onclick="removeFromCart('${key}')">Remove</button></div>
       </div>
@@ -905,7 +952,7 @@ async function placeOrder(){
 
   const zoneName = deliveryMethod === 'delivery' ? ALL_ZONES.find(z => String(z.id) === String(selectedZoneId))?.locationName : null;
   const body = {
-    items: Object.values(cart).map(i => ({ productId: i.product.id, qty: i.qty, variantId: i.variantId || undefined })),
+    items: Object.values(cart).map(i => ({ productId: i.product.id, qty: i.qty, variantId: i.variantId || undefined, options: (i.options && i.options.length) ? i.options : undefined })),
     customer: { name, phone, email: email || undefined, location: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup' },
     delivery: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup at store',
     deliveryZoneId: deliveryMethod === 'delivery' ? selectedZoneId : null,
