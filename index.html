@@ -166,6 +166,10 @@ dialog::backdrop{background:rgba(8,12,30,.55)}
 .pd .pv{background:var(--soft);display:grid;place-items:center;min-height:320px;position:relative}
 .pd .pv img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .pd .pv svg{width:55%}
+.pv-thumbs{position:absolute;left:12px;right:12px;bottom:12px;display:flex;gap:8px;overflow-x:auto;z-index:2;padding:2px}
+.pv-thumbs button{width:54px;height:54px;flex-shrink:0;border-radius:10px;border:2px solid #fff;padding:0;overflow:hidden;cursor:pointer;background:var(--soft);opacity:.85;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.pv-thumbs button[aria-pressed="true"]{border-color:var(--pop);opacity:1}
+.pd .pv .pv-thumbs img{position:static;width:100%;height:100%;object-fit:cover;display:block}
 .pd .pi{padding:28px;display:flex;flex-direction:column;gap:14px}
 .pd .pc{font-weight:700;font-size:13px;color:var(--brand-text);text-transform:uppercase;letter-spacing:.08em}
 .pd h2{font-size:32px;overflow-wrap:anywhere}
@@ -209,6 +213,15 @@ dialog::backdrop{background:rgba(8,12,30,.55)}
 .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--fg);color:var(--bg);padding:12px 20px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:all .25s;z-index:2000;pointer-events:none;max-width:92vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* compact "choose your size" sheet opened from a card's quick button: image on top, choices, add */
+#dlg-product.compact{width:min(440px,calc(100% - 24px))}
+#dlg-product.compact .pd{grid-template-columns:1fr}
+#dlg-product.compact .pv{min-height:0;height:170px}
+#dlg-product.compact .pv svg{width:34%}
+#dlg-product.compact .desc,#dlg-product.compact .specs{display:none!important}
+#dlg-product.compact .pi{padding:20px 22px 22px}
+#dlg-product.compact h2{font-size:26px}
+.more{background:none;border:0;padding:0;color:var(--brand-text);font-weight:700;text-align:left;cursor:pointer;font-size:14px;text-decoration:underline}
 @media (max-width:980px){
   .grid{grid-template-columns:repeat(2,1fr)}
   .cats,.how{grid-template-columns:1fr}
@@ -312,6 +325,7 @@ dialog::backdrop{background:rgba(8,12,30,.55)}
     <div id="pm-variants"></div>
     <div class="oosnote" id="pm-oos-note" style="display:none">Currently out of stock</div>
     <div class="qty" id="pm-stepper"><button onclick="changeQty(-1)" aria-label="Less">−</button><span id="pm-qty">1</span><button onclick="changeQty(1)" aria-label="More">+</button></div>
+    <button class="more" id="pm-more" style="display:none" onclick="openProduct(activeProduct.id)">View full details</button>
     <button class="btn brand full" id="pm-add-btn" onclick="addToCartFromModal()">Add to bag</button>
   </div>
 </div></dialog>
@@ -762,12 +776,18 @@ function renderHow(){
 }
 
 // ---- Product dialog ----
-function openProduct(id){
+function openProduct(id, compact){
   activeProduct = ALL_PRODUCTS.find(p => Number(p.id) === Number(id));
   if(!activeProduct || (!activeProduct.inStock && !(activeProduct.variants||[]).length)) return;
   modalQty = 1;
   selectedVariant = null;
-  $('pm-visual').innerHTML = productVisual(activeProduct);
+  $('dlg-product').classList.toggle('compact', !!compact);
+  $('pm-more').style.display = compact ? 'block' : 'none';
+  const gallery = (activeProduct.images && activeProduct.images.length) ? activeProduct.images : (activeProduct.imageUrl ? [activeProduct.imageUrl] : []);
+  $('pm-visual').innerHTML = gallery.length
+    ? `<img id="pm-main-img" src="${esc(gallery[0])}" alt="${esc(activeProduct.name)}">` + (gallery.length > 1
+        ? `<div class="pv-thumbs">${gallery.map((u,i) => `<button type="button" aria-pressed="${i===0}" aria-label="Photo ${i+1}" onclick="showPhoto(${i})"><img src="${esc(u)}" alt=""></button>`).join('')}</div>` : '')
+    : placeholder(activeProduct);
   $('pm-cat').textContent = activeProduct.category || '';
   $('pm-title').textContent = activeProduct.name;
   $('pm-desc').textContent = activeProduct.description || '';
@@ -805,6 +825,12 @@ function selectVariant(variantId){
   if(selectedVariant) $('pm-price').textContent = money(selectedVariant.price);
   updateProductModalState();
 }
+function showPhoto(i){
+  const g = activeProduct.images || [];
+  if(!g[i]) return;
+  $('pm-main-img').src = g[i];
+  document.querySelectorAll('.pv-thumbs button').forEach((b,j) => b.setAttribute('aria-pressed', j === i));
+}
 function selectOption(gi, vi){
   const g = activeProduct._optGroups[gi];
   selectedOptions[g.label] = g.values[vi];
@@ -838,7 +864,7 @@ function addToCartFromModal(){
 function quickAdd(id){
   const p = ALL_PRODUCTS.find(x => Number(x.id) === Number(id));
   if(!p) return;
-  if((p.variants || []).length || parseOptions(p).groups.length){ openProduct(id); return; } // needs a choice first
+  if((p.variants || []).length || parseOptions(p).groups.length){ openProduct(id, true); return; } // needs a choice first: compact size sheet with the photo
   addToCart(p, 1, null);
 }
 
