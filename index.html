@@ -374,6 +374,16 @@ const CAMPAIGN_ID = (function(){
   }catch(e){ return undefined; }
 })();
 
+// Social attribution: tracked links look like ?business=5&src=instagram. Remembered for the visit
+// so the order is credited to that channel (shown in the merchant's Marketing → Analytics).
+const SOURCE = (function(){
+  try{
+    var s = (new URLSearchParams(window.location.search).get('src') || '').toLowerCase();
+    if(/^(instagram|whatsapp|facebook|tiktok|other)$/.test(s)) sessionStorage.setItem('kooza_src_'+BUSINESS_ID, s);
+    return sessionStorage.getItem('kooza_src_'+BUSINESS_ID) || undefined;
+  }catch(e){ return undefined; }
+})();
+
 if(!BUSINESS_ID){
   document.body.innerHTML = `<div style="max-width:420px; margin:80px auto; text-align:center; font-family:sans-serif; padding:0 20px;">
     <h2>No store selected</h2>
@@ -983,6 +993,7 @@ async function placeOrder(){
     delivery: deliveryMethod === 'delivery' ? `${zoneName} — ${address}` : 'Pickup at store',
     deliveryZoneId: deliveryMethod === 'delivery' ? selectedZoneId : null,
     campaignId: CAMPAIGN_ID,
+    source: SOURCE,
   };
 
   try{
