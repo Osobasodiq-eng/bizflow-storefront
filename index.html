@@ -406,7 +406,7 @@ dialog{box-shadow:0 40px 100px rgba(0,0,0,.6)}
   .stage{min-height:380px}
   .sl{width:min(250px,64vw)}
   .fl3.a{left:0}.fl3.b{right:0}
-  .tag3{right:-2%;bottom:6%;max-width:150px;padding:10px 12px}
+  .tag3{right:3%;bottom:6%;max-width:140px;padding:10px 12px}
   .dots{bottom:-30px}
   .hero h1{font-size:clamp(38px,12vw,60px);overflow-wrap:normal}
   .hero .cta .btn{flex:1;padding-inline:18px}
@@ -445,7 +445,7 @@ html[data-mode="light"] .spot{mix-blend-mode:multiply;background:radial-gradient
 .s{position:relative}
 .s[data-ghost]:before{content:attr(data-ghost);position:absolute;left:50%;top:-.1em;transform:translateX(calc(-50% + var(--gp,0)*1px));font:900 clamp(90px,19vw,300px)/1 var(--d);font-stretch:125%;letter-spacing:-.04em;white-space:nowrap;color:transparent;-webkit-text-stroke:1.5px color-mix(in srgb,var(--fg) 14%,transparent);pointer-events:none;z-index:-1;text-transform:uppercase}
 .cine .hd.rv:not(.in),.cine .cats.rv:not(.in),.cine .how>div.rv:not(.in){rotate:1 0 0 28deg;transform-origin:50% 100%}
-.cine .rv.in{rotate:1 0 0 0deg}
+.cine .hd.rv.in,.cine .cats.rv.in,.cine .how>div.rv.in{rotate:1 0 0 0deg}
 .cine .rv{transition:opacity .9s var(--ease),translate .9s var(--ease),rotate .9s var(--ease),transform .35s var(--ease),box-shadow .35s}
 .hd h2{position:relative;display:inline-block}
 .hd h2:after{content:"";display:block;height:10px;width:min(180px,60%);margin-top:12px;border-radius:99px;background:repeating-linear-gradient(115deg,var(--pop) 0 10px,transparent 10px 18px);transform:skewX(-20deg)}
@@ -513,6 +513,126 @@ nav a:hover{animation:jig .4s}
 }
 @media (hover:none){.spot,.cur{display:none}}
 @media (prefers-reduced-motion:reduce){.fx i{transform:none!important}.mq2 .tk2,.news:after,.mq2 span:after{animation:none}.cine .hd.rv:not(.in),.cine .cats.rv:not(.in),.cine .how>div.rv:not(.in){rotate:none}}
+
+/* ===================== PRODUCT DISPLAY STYLES (merchant chooses) ===================== */
+.pr{position:relative}
+.pr .d1,.pr .d2,.pr .dsc,.cv-nav{display:none}
+.pr .dsc{margin:6px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
+#product-grid{--wood1:#9a6a42;--wood2:#5a3a22;--wood3:#c4915f}
+html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e2bd93}
+
+/* ---- SHELF: products stand on wooden planks ---- */
+#product-grid[data-display="shelf"]{gap:52px 22px;padding:34px 26px 30px;border-radius:22px;background:linear-gradient(180deg,color-mix(in srgb,var(--fg) 7%,var(--bg)),color-mix(in srgb,var(--fg) 3%,var(--bg)));box-shadow:inset 0 0 60px rgba(0,0,0,.25),inset 0 0 0 1px var(--line)}
+[data-display="shelf"] .pr .pic{background:transparent;border:0;box-shadow:none;border-radius:14px 14px 0 0;margin-bottom:-2px;aspect-ratio:1/.95}
+[data-display="shelf"] .pr.tilt:hover .pic{box-shadow:none}
+[data-display="shelf"] .pr .pic img{object-fit:contain;filter:drop-shadow(0 18px 14px rgba(0,0,0,.45));padding:6px}
+[data-display="shelf"] .pr .pic svg{filter:drop-shadow(0 16px 12px rgba(0,0,0,.4))}
+[data-display="shelf"] .pr .d2{display:block;height:18px;margin:0 -11px;border-radius:3px;background:linear-gradient(180deg,var(--wood3) 0 4px,var(--wood1) 4px 60%,var(--wood2));box-shadow:0 14px 18px -6px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.25)}
+[data-display="shelf"] .pr:after{content:"";position:absolute;left:-11px;right:-11px;top:60%;bottom:-44px;pointer-events:none}
+[data-display="shelf"] .meta{padding-top:14px}
+
+/* ---- HANGER: clothes on a rail ---- */
+#product-grid[data-display="hanger"]{gap:30px 22px;padding-top:6px}
+[data-display="hanger"] .pr .d1{display:block;height:74px;margin:0 -11px -34px;position:relative;z-index:3;pointer-events:none}
+[data-display="hanger"] .pr .d1:before{content:"";position:absolute;left:0;right:0;top:6px;height:9px;border-radius:5px;background:linear-gradient(180deg,#e6e8ee,#8c91a0 55%,#4b5060);box-shadow:0 6px 10px rgba(0,0,0,.4)}
+[data-display="hanger"] .pr .d1:after{content:"";position:absolute;left:50%;top:10px;width:96px;height:72px;margin-left:-48px;background:var(--fg);opacity:.85;-webkit-mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 72'><path d='M48 4c-6 0-10 4-10 9 0 4 3 6 6 8l-4 3C30 29 8 40 4 52c-2 5 1 8 6 8h76c5 0 8-3 6-8-4-12-26-23-36-28l-4-3c3-2 6-4 6-8 0-5-4-9-10-9z' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 72'><path d='M48 4c-6 0-10 4-10 9 0 4 3 6 6 8l-4 3C30 29 8 40 4 52c-2 5 1 8 6 8h76c5 0 8-3 6-8-4-12-26-23-36-28l-4-3c3-2 6-4 6-8 0-5-4-9-10-9z' fill='none' stroke='black' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/contain no-repeat}
+[data-display="hanger"] .pr .pic{aspect-ratio:3/4;border-radius:10px 10px 22px 22px;transform-origin:50% 0;margin-top:16px;border:0;box-shadow:0 26px 30px -20px rgba(0,0,0,.6)}
+[data-display="hanger"] .pr:hover .pic{animation:swing 1.2s ease-in-out}
+@keyframes swing{15%{rotate:3.5deg}40%{rotate:-2.5deg}65%{rotate:1.4deg}85%{rotate:-.6deg}}
+[data-display="hanger"] .pr .meta{padding-top:12px;text-align:center}
+
+/* ---- SPOTLIGHT: gallery podiums under a light cone ---- */
+#product-grid[data-display="spotlight"]{gap:34px 22px;padding:34px 24px 26px;border-radius:24px;background:radial-gradient(120% 80% at 50% 0,color-mix(in srgb,var(--brand) 40%,#0a0a10),#05060a 70%);color:#fff}
+[data-display="spotlight"] .pr:before{content:"";position:absolute;left:4%;right:4%;top:-30px;height:72%;pointer-events:none;background:linear-gradient(to bottom,rgba(255,255,255,.28),transparent);clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);opacity:.55;mix-blend-mode:screen}
+[data-display="spotlight"] .pr .pic{background:transparent;border:0;box-shadow:none;border-radius:22px;aspect-ratio:1;z-index:1;animation:float3 6s ease-in-out infinite}
+[data-display="spotlight"] .pr:nth-child(even) .pic{animation-delay:-3s}
+@keyframes float3{50%{translate:0 -10px}}
+[data-display="spotlight"] .pr .pic img{border-radius:20px;box-shadow:0 30px 40px -20px rgba(0,0,0,.9)}
+[data-display="spotlight"] .pr .d2{display:block;width:78%;height:34px;margin:-14px auto 0;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--pop) 80%,#fff),color-mix(in srgb,var(--pop) 30%,#111) 70%,#0a0a10);box-shadow:0 0 40px color-mix(in srgb,var(--pop) 55%,transparent),0 14px 20px rgba(0,0,0,.7)}
+[data-display="spotlight"] .meta{text-align:center;padding-top:14px}
+[data-display="spotlight"] .meta h3,[data-display="spotlight"] .meta p{color:#fff}
+[data-display="spotlight"] .meta p{opacity:.65}
+
+/* ---- PINBOARD: polaroids on a corkboard ---- */
+#product-grid[data-display="pinboard"]{gap:40px 26px;padding:44px 30px 36px;border-radius:18px;border:10px solid #6b4426;background-color:#b98a58;background-image:radial-gradient(rgba(60,35,15,.35) 1px,transparent 1.5px),radial-gradient(rgba(255,235,200,.25) 1px,transparent 1.5px);background-size:9px 9px,13px 13px;background-position:0 0,4px 5px;box-shadow:inset 0 0 40px rgba(0,0,0,.4),0 20px 40px -20px rgba(0,0,0,.6)}
+[data-display="pinboard"] .pr{background:#fffdf7;color:#222;padding:12px 12px 6px;box-shadow:0 14px 24px -8px rgba(0,0,0,.55);rotate:-2.5deg;transition:rotate .4s var(--ease),translate .4s var(--ease)}
+[data-display="pinboard"] .pr:nth-child(3n+2){rotate:2deg}
+[data-display="pinboard"] .pr:nth-child(3n){rotate:-1deg}
+[data-display="pinboard"] .pr:nth-child(4n){rotate:3deg}
+[data-display="pinboard"] .pr:hover{rotate:0deg;translate:0 -6px;z-index:5}
+[data-display="pinboard"] .pr .d1{display:block;position:absolute;left:50%;top:-12px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff9a9a,#d1202f 60%,#7a0f18);box-shadow:3px 6px 6px rgba(0,0,0,.45);z-index:6}
+[data-display="pinboard"] .pr:nth-child(3n+2) .d1{background:radial-gradient(circle at 35% 30%,#9ad7ff,#1c74c7 60%,#0d3a66)}
+[data-display="pinboard"] .pr:nth-child(3n) .d1{left:50%;top:-14px;width:84px;height:26px;margin-left:-42px;border-radius:3px;background:rgba(255,235,160,.78);box-shadow:0 2px 4px rgba(0,0,0,.25);rotate:-3deg}
+[data-display="pinboard"] .pr .pic{border-radius:3px;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);aspect-ratio:1/1}
+[data-display="pinboard"] .pr.tilt:hover .pic{box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+[data-display="pinboard"] .pr .meta{text-align:center;padding:10px 2px 8px}
+[data-display="pinboard"] .meta h3{font-family:var(--d);font-stretch:100%;font-weight:700}
+[data-display="pinboard"] .meta p{color:#665}
+[data-display="pinboard"] .pr.oos{opacity:.8}
+
+/* ---- LOOKBOOK: editorial mosaic, names over photos ---- */
+#product-grid[data-display="lookbook"]{grid-template-columns:repeat(6,1fr);grid-auto-rows:215px;grid-auto-flow:dense;gap:14px}
+[data-display="lookbook"] .pr{grid-column:span 2;border-radius:24px;overflow:hidden}
+[data-display="lookbook"] .pr:nth-child(6n+1){grid-column:span 3;grid-row:span 2}
+[data-display="lookbook"] .pr:nth-child(6n+2),[data-display="lookbook"] .pr:nth-child(6n+3){grid-column:span 3}
+[data-display="lookbook"] .pr .pic{position:absolute;inset:0;aspect-ratio:auto;border-radius:0;border:0}
+[data-display="lookbook"] .pr.tilt:hover .pic{box-shadow:none}
+[data-display="lookbook"] .pr .meta{position:absolute;left:0;right:0;bottom:0;padding:46px 18px 16px;background:linear-gradient(to top,rgba(0,0,0,.82),transparent);color:#fff;z-index:2;pointer-events:none}
+[data-display="lookbook"] .meta h3{font-family:var(--d);font-weight:900;font-size:clamp(18px,2vw,26px);line-height:1.1;letter-spacing:-.01em}
+[data-display="lookbook"] .meta p{color:rgba(255,255,255,.7)}
+[data-display="lookbook"] .meta .price{color:#fff}
+[data-display="lookbook"] .pr:nth-child(6n+1) .dsc{display:block;color:rgba(255,255,255,.8);max-width:46ch}
+[data-display="lookbook"] .quick{top:12px;bottom:auto;left:12px;right:auto;padding:9px 16px}
+
+/* ---- CATALOGUE: clean list with details ---- */
+#product-grid[data-display="catalogue"]{grid-template-columns:1fr 1fr;gap:16px 26px}
+[data-display="catalogue"] .pr{flex-direction:row;gap:18px;align-items:center;padding:14px;border:1px solid var(--line);border-radius:22px;background:var(--card)}
+[data-display="catalogue"] .pr .pic{width:150px;flex:0 0 150px;aspect-ratio:1;border-radius:16px}
+[data-display="catalogue"] .pr .meta{padding:0;flex:1;min-width:0}
+[data-display="catalogue"] .meta h3{font-size:19px}
+[data-display="catalogue"] .pr .dsc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+[data-display="catalogue"] .pr .stk{right:auto;left:8px;top:8px}
+[data-display="catalogue"] .quick{display:none}
+
+/* ---- STALL: market stall with an awning and chalkboard prices ---- */
+#product-grid[data-display="stall"]{position:relative;padding:92px 24px 28px;gap:26px 22px;border-radius:0 0 24px 24px;background:color-mix(in srgb,var(--wood2) 18%,var(--bg));box-shadow:inset 0 0 0 1px var(--line)}
+#product-grid[data-display="stall"]:before{content:"";position:absolute;left:-6px;right:-6px;top:0;height:74px;background:repeating-linear-gradient(90deg,var(--pop) 0 44px,#fff 44px 88px);border-radius:10px 10px 0 0;-webkit-mask:radial-gradient(22px at 22px 100%,transparent 98%,#000) 0 100%/44px 22px repeat-x,linear-gradient(#000,#000) 0 0/100% calc(100% - 21px) no-repeat;mask:radial-gradient(22px at 22px 100%,transparent 98%,#000) 0 100%/44px 22px repeat-x,linear-gradient(#000,#000) 0 0/100% calc(100% - 21px) no-repeat;filter:drop-shadow(0 12px 12px rgba(0,0,0,.35))}
+[data-display="stall"] .pr{border:4px solid var(--wood2);border-radius:14px;background:var(--card);padding:10px;box-shadow:0 12px 0 -4px color-mix(in srgb,var(--wood2) 80%,#000)}
+[data-display="stall"] .pr .pic{border-radius:6px;border:0}
+[data-display="stall"] .stk{background:#1f2a24;color:#f4f1e6;border-radius:6px;font-family:"Figtree",sans-serif;font-weight:800;box-shadow:0 0 0 3px #8a5a36,3px 5px 0 3px rgba(0,0,0,.35);right:6px;top:6px;rotate:-4deg}
+[data-display="stall"] .pr:nth-child(even) .stk{rotate:3deg}
+[data-display="stall"] .meta{padding-top:10px}
+
+/* ---- CAROUSEL: 3D cover-flow ---- */
+#product-grid[data-display="carousel"]{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;perspective:1100px;padding:40px max(8vw,24px) 70px;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+#product-grid[data-display="carousel"]::-webkit-scrollbar{display:none}
+[data-display="carousel"] .pr{flex:0 0 min(300px,68vw);scroll-snap-align:center;margin:0 -14px;-webkit-box-reflect:below 6px linear-gradient(transparent 62%,rgba(255,255,255,.14))}
+.cine #product-grid[data-display="carousel"] .pr.rv{transition:rotate .25s ease-out,scale .25s ease-out,translate .25s ease-out,opacity .25s;translate:0 0 0}
+[data-display="carousel"] .pr .pic{aspect-ratio:3/4;border-radius:20px}
+[data-display="carousel"] .meta{text-align:center}
+.cv-nav{position:absolute;right:24px;top:-8px;gap:8px}
+#shop.has-cv .cv-nav{display:flex}
+.cv-nav button{width:46px;height:46px;border-radius:50%;border:2px solid var(--fg);background:var(--card);color:var(--fg);font-size:20px;cursor:pointer;box-shadow:3px 3px 0 var(--fg)}
+.cv-nav button:active{translate:2px 2px;box-shadow:1px 1px 0 var(--fg)}
+#shop{position:relative}
+
+@media (max-width:980px){
+  #product-grid[data-display="lookbook"]{grid-template-columns:repeat(2,1fr);grid-auto-rows:230px}
+  [data-display="lookbook"] .pr,[data-display="lookbook"] .pr:nth-child(6n+2),[data-display="lookbook"] .pr:nth-child(6n+3){grid-column:span 1;grid-row:span 1}
+  [data-display="lookbook"] .pr:nth-child(5n+1){grid-column:span 2}
+  #product-grid[data-display="catalogue"]{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  #product-grid[data-display="shelf"],#product-grid[data-display="spotlight"]{padding:22px 14px}
+  #product-grid[data-display="pinboard"]{padding:34px 16px 26px;gap:34px 16px;border-width:7px}
+  [data-display="catalogue"] .pr .pic{width:104px;flex-basis:104px}
+  [data-display="catalogue"] .pr{padding:10px;gap:12px}
+  [data-display="shelf"] .pr .d2{margin:0 -7px}
+  #product-grid[data-display="stall"]{padding:84px 14px 22px}
+  .cv-nav{display:none!important}
+}
+@media (hover:none){[data-display] .quick{font-size:12px;padding:7px 4px;left:8px;right:8px;bottom:8px}}
+@media (prefers-reduced-motion:reduce){[data-display="spotlight"] .pr .pic,[data-display="hanger"] .pr:hover .pic{animation:none}}
 </style>
 </head>
 <body>
@@ -991,6 +1111,7 @@ function updateGridTitle(){
 
 function renderGrid(){
   const grid = $('product-grid');
+  applyDisplay();
   let items = ALL_PRODUCTS.filter(p => activeCategory === 'All' || (p.category || 'Other') === activeCategory);
   if(searchQuery) items = items.filter(p => (p.name||'').toLowerCase().includes(searchQuery) || (p.category||'').toLowerCase().includes(searchQuery));
   if(sortMode === 'low') items = items.slice().sort((a,b) => sortKey(a) - sortKey(b));
@@ -1003,14 +1124,17 @@ function renderGrid(){
   grid.innerHTML = items.map(p => {
     const hasVariants = (p.variants || []).length > 0;
     return `<article class="pr ${p.inStock ? '' : 'oos'}">
+      <i class="d1" aria-hidden="true"></i>
       <div class="pic" ${p.inStock ? `tabindex="0" role="button" aria-label="View ${esc(p.name)}" onclick="openProduct(${Number(p.id)})" onkeydown="if(event.key==='Enter')openProduct(${Number(p.id)})"` : ''}>
         ${p.inStock ? '' : '<span class="badge sold">Sold out</span>'}
         ${productVisual(p)}
         ${p.inStock ? `<button class="btn quick" onclick="event.stopPropagation();quickAdd(${Number(p.id)})">${hasVariants ? 'Choose size' : 'Quick add'}</button>` : ''}
       </div>
+      <i class="d2" aria-hidden="true"></i>
       <div class="meta">
         <h3 ${p.inStock ? `onclick="openProduct(${Number(p.id)})"` : ''}>${esc(p.name)}</h3>
         <p>${esc(p.category || '')}</p>
+        ${p.description ? `<p class="dsc">${esc(String(p.description).slice(0,150))}</p>` : ''}
         <div class="price">${esc(priceRange(p))}</div>
       </div>
     </article>`;
@@ -1582,6 +1706,42 @@ function funkRefresh(){
   if(f && !$('fgiant')){ const g = document.createElement('div'); g.id = 'fgiant'; g.className = 'fgiant'; g.setAttribute('aria-hidden', 'true'); f.parentNode.insertBefore(g, f); }
   if($('fgiant')) $('fgiant').textContent = STORE.name || '';
 }
+
+/* ---- product display style (merchant picks it in Store settings; ?display=shelf previews one) ---- */
+const DISPLAY_STYLES = ['grid','shelf','hanger','spotlight','pinboard','lookbook','catalogue','stall','carousel'];
+function currentDisplay(){
+  let d = new URLSearchParams(location.search).get('display') || STORE.displayStyle || 'grid';
+  return DISPLAY_STYLES.includes(d) ? d : 'grid';
+}
+function applyDisplay(){
+  const g = $('product-grid'), d = currentDisplay();
+  g.dataset.display = d;
+  const shop = $('shop'); if(shop) shop.classList.toggle('has-cv', d === 'carousel');
+  if(d === 'carousel'){ ensureCvNav(); setTimeout(cvUpdate, 60); }
+}
+function ensureCvNav(){
+  if($('cv-nav')) return;
+  const n = document.createElement('div'); n.id = 'cv-nav'; n.className = 'cv-nav';
+  n.innerHTML = '<button aria-label="Previous" onclick="cvStep(-1)">←</button><button aria-label="Next" onclick="cvStep(1)">→</button>';
+  $('shop').appendChild(n);
+  $('product-grid').addEventListener('scroll', () => requestAnimationFrame(cvUpdate), { passive: true });
+  addEventListener('resize', cvUpdate);
+}
+function cvStep(dir){ const g = $('product-grid'), c = g.querySelector('.pr'); if(c) g.scrollBy({ left: dir * (c.offsetWidth - 28), behavior: 'smooth' }); }
+function cvUpdate(){
+  const g = $('product-grid'); if(g.dataset.display !== 'carousel') return;
+  const mid = g.getBoundingClientRect().left + g.clientWidth / 2;
+  g.querySelectorAll('.pr').forEach(el => {
+    const r = el.getBoundingClientRect(), d = Math.max(-2, Math.min(2, (r.left + r.width / 2 - mid) / r.width));
+    const a = Math.abs(d);
+    el.style.rotate = CINE.calm ? '' : `0 1 0 ${(-d * 38).toFixed(1)}deg`;
+    el.style.scale = (1 - Math.min(a, 1.4) * .13).toFixed(3);
+    el.style.translate = `0 0 ${(-a * 90).toFixed(0)}px`;
+    el.style.opacity = (1 - Math.min(a, 2) * .22).toFixed(2);
+  });
+}
+// leaving carousel: clear inline transforms
+(function(){ const _a = applyDisplay; applyDisplay = function(){ const g = $('product-grid'); if(g.dataset.display === 'carousel' && currentDisplay() !== 'carousel') g.querySelectorAll('.pr').forEach(e => { e.style.rotate = e.style.scale = e.style.translate = e.style.opacity = ''; }); return _a(); }; })();
 </script>
 
 <!-- ===== Message us (chat with the store; replies come from the merchant's Kooza inbox) ===== -->
