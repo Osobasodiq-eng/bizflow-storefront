@@ -635,6 +635,15 @@ html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e
 @media (prefers-reduced-motion:reduce){[data-display="spotlight"] .pr .pic,[data-display="hanger"] .pr:hover .pic{animation:none}}
 .dcrow{display:flex;gap:8px}.dcrow input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.08em}.dcrow .btn,.dcrow .btn.line{padding:10px 22px;background:var(--fg);color:var(--bg);box-shadow:none;flex:none}
 .dcrow .btn:disabled{opacity:.6}
+
+/* sales: struck-through normal price + percent-off badges */
+.price s,.pp s{color:var(--muted);font-weight:500;font-size:.82em;margin-left:8px;text-decoration-thickness:2px}
+.pp .offtag{display:inline-block;margin-left:10px;background:var(--red);color:#fff;font:900 13px var(--d);padding:4px 10px;border-radius:999px;vertical-align:middle;rotate:-4deg}
+.salenote{display:inline-block;align-self:flex-start;background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red);font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:999px}
+.offb{position:absolute;left:10px;top:10px;z-index:3;background:var(--red);color:#fff;font:900 13px var(--d);padding:5px 11px;border-radius:999px;rotate:-6deg;box-shadow:2px 2px 0 var(--fg);pointer-events:none}
+[data-display="catalogue"] .offb{top:auto;bottom:8px}
+[data-display="lookbook"] .offb,[data-display="pinboard"] .offb{top:14px;left:14px}
+.stk s{display:block;font-size:10px;font-weight:600;opacity:.7;line-height:1.1;margin:2px 0 0;text-align:center;text-decoration-thickness:1.5px}
 </style>
 </head>
 <body>
@@ -711,6 +720,7 @@ html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e
     <div class="dh"><div class="pc" id="pm-cat">Category</div><button class="x" onclick="closeOverlay('product')" aria-label="Close">×</button></div>
     <h2 id="pm-title">Product</h2>
     <div class="pp" id="pm-price">₦0</div>
+    <div class="salenote" id="pm-sale" style="display:none"></div>
     <p class="desc" id="pm-desc"></p>
     <div id="pm-specs"></div>
     <div id="pm-options" style="display:grid;gap:14px"></div>
@@ -933,18 +943,33 @@ function parseOptions(p){
   });
   return { groups, facts };
 }
-function priceRange(p){
+// Sales: the API sends the normal price (price) and, while a sale runs, the cut price (salePrice) + salePercent.
+const nowPrice = x => (x.salePrice != null ? x.salePrice : x.price);   // what the buyer pays — works for products and variants
+function rangeText(p, f){
   const vs = (p.variants || []).filter(v => v.price != null);
   if(vs.length){
-    const lo = Math.min(...vs.map(v => v.price)), hi = Math.max(...vs.map(v => v.price));
-    if(lo !== hi) return `From ${money(lo)}`;
-    return money(lo);
+    const lo = Math.min(...vs.map(f)), hi = Math.max(...vs.map(f));
+    return lo !== hi ? `From ${money(lo)}` : money(lo);
   }
-  return money(p.price);
+  return money(f(p));
+}
+function priceRange(p){ return rangeText(p, nowPrice); }
+function listRange(p){ return rangeText(p, x => x.price); }   // the normal price, shown struck through during a sale
+function priceHtml(p){
+  return p.salePercent ? `<span class="now">${esc(priceRange(p))}</span><s>${esc(listRange(p))}</s>` : `<span class="now">${esc(priceRange(p))}</span>`;
 }
 function sortKey(p){
   const vs = (p.variants || []).filter(v => v.price != null);
-  return vs.length ? Math.min(...vs.map(v => v.price)) : p.price;
+  return vs.length ? Math.min(...vs.map(nowPrice)) : nowPrice(p);
+}
+function saleInfo(){
+  const on = ALL_PRODUCTS.filter(p => p.salePercent && p.inStock);
+  if(!on.length) return null;
+  const top = on.reduce((a, p) => p.salePercent > a.salePercent ? p : a, on[0]);
+  const everything = on.length === ALL_PRODUCTS.filter(p => p.inStock).length && new Set(on.map(p => p.salePercent)).size === 1;
+  const ends = on.map(p => p.saleEndsAt).filter(Boolean).sort()[0];
+  const endTxt = ends ? ` · ends ${new Date(ends).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : '';
+  return { text: `${top.saleName || 'Sale'}: ${everything ? `${top.salePercent}% off everything` : `up to ${top.salePercent}% off`}${endTxt}` };
 }
 
 function showStatus(msg, isError){
@@ -1035,6 +1060,7 @@ function renderPromo(){
   }
   parts.push('Free pickup');
   if(paymentsEnabled) parts.push('Secure checkout');
+  const sale = saleInfo(); if(sale) parts.unshift('🔥 ' + sale.text);
   $('promo').textContent = parts.join(' · ');
 }
 
@@ -1132,7 +1158,7 @@ function renderGrid(){
     return `<article class="pr ${p.inStock ? '' : 'oos'}">
       <i class="d1" aria-hidden="true"></i>
       <div class="pic" ${p.inStock ? `tabindex="0" role="button" aria-label="View ${esc(p.name)}" onclick="openProduct(${Number(p.id)})" onkeydown="if(event.key==='Enter')openProduct(${Number(p.id)})"` : ''}>
-        ${p.inStock ? '' : '<span class="badge sold">Sold out</span>'}
+        ${p.inStock ? (p.salePercent ? `<span class="offb">−${p.salePercent}%</span>` : '') : '<span class="badge sold">Sold out</span>'}
         ${productVisual(p)}
         ${p.inStock ? `<button class="btn quick" onclick="event.stopPropagation();quickAdd(${Number(p.id)})">${hasVariants ? 'Choose size' : 'Quick add'}</button>` : ''}
       </div>
@@ -1141,7 +1167,7 @@ function renderGrid(){
         <h3 ${p.inStock ? `onclick="openProduct(${Number(p.id)})"` : ''}>${esc(p.name)}</h3>
         <p>${esc(p.category || '')}</p>
         ${p.description ? `<p class="dsc">${esc(String(p.description).slice(0,150))}</p>` : ''}
-        <div class="price">${esc(priceRange(p))}</div>
+        <div class="price">${priceHtml(p)}</div>
       </div>
     </article>`;
   }).join('');
@@ -1221,7 +1247,7 @@ function openProduct(id, compact){
       `<button aria-pressed="false" data-g="${gi}" data-v="${vi}" onclick="selectOption(${gi},${vi})">${esc(v)}</button>`).join('')}</div></div>`).join('');
 
   const variants = activeProduct.variants || [];
-  $('pm-price').textContent = priceRange(activeProduct);
+  setModalPrice();
   if(variants.length){
     $('pm-variants').innerHTML = `<div class="lbl">${parsed.groups.some(g => /size/i.test(g.label)) ? 'Option' : 'Size'}</div><div class="sizes">${variants.map(v =>
       `<button aria-pressed="false" ${v.inStock ? '' : 'disabled'} data-variant-id="${v.id}" onclick="selectVariant(${Number(v.id)})">${esc(v.label)}</button>`).join('')}</div>`;
@@ -1234,13 +1260,24 @@ function openProduct(id, compact){
   $('pm-qty').textContent = modalQty;
   openOverlay('product');
 }
+function setModalPrice(){
+  const p = activeProduct, v = selectedVariant, el = $('pm-price');
+  if(v){
+    el.innerHTML = v.salePrice != null
+      ? `<span class="now">${money(v.salePrice)}</span><s>${money(v.price)}</s>${p.salePercent ? `<span class="offtag">−${p.salePercent}%</span>` : ''}`
+      : `<span class="now">${money(v.price)}</span>`;
+  } else {
+    el.innerHTML = priceHtml(p) + (p.salePercent ? `<span class="offtag">−${p.salePercent}%</span>` : '');
+  }
+  const note = $('pm-sale'); if(note){ note.style.display = p.salePercent ? 'block' : 'none'; note.textContent = p.salePercent ? `${p.saleName || 'Sale'} — ${p.salePercent}% off` + (p.saleEndsAt ? ` until ${new Date(p.saleEndsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : '') : ''; }
+}
 function selectVariant(variantId){
   const variants = activeProduct.variants || [];
   selectedVariant = variants.find(v => Number(v.id) === Number(variantId)) || null;
   document.querySelectorAll('#pm-variants .sizes button').forEach(el => {
     el.setAttribute('aria-pressed', String(el.dataset.variantId) === String(variantId));
   });
-  if(selectedVariant) $('pm-price').textContent = money(selectedVariant.price);
+  setModalPrice();
   updateProductModalState();
 }
 function showPhoto(i){
@@ -1297,7 +1334,7 @@ function addToCart(product, qty, variant, options){
     product, qty, options,
     variantId: variant ? variant.id : null,
     variantLabel: variant ? variant.label : null,
-    unitPrice: variant ? variant.price : product.price,
+    unitPrice: variant ? nowPrice(variant) : nowPrice(product),
   };
   refreshCartBadge();
   toast(`Added ${product.name}${variant || optText ? ` (${[variant && variant.label, optText].filter(Boolean).join(', ')})` : ''} to bag`);
@@ -1732,7 +1769,9 @@ function funkRefresh(){
   document.querySelectorAll('.pr').forEach(pr => {
     const pic = pr.querySelector('.pic'), price = pr.querySelector('.price');
     if(pic && price && !pic.querySelector('.stk')){
-      const s = document.createElement('span'); s.className = 'stk'; s.setAttribute('aria-hidden', 'true'); s.textContent = price.textContent; pic.appendChild(s);
+      const s = document.createElement('span'); s.className = 'stk'; s.setAttribute('aria-hidden', 'true'); const nowEl = price.querySelector('.now'), was = price.querySelector('s');
+      s.textContent = (nowEl || price).textContent;
+      if(was){ const w = document.createElement('s'); w.textContent = was.textContent; s.appendChild(w); } pic.appendChild(s);
       price.classList.add('vh');
     }
   });
