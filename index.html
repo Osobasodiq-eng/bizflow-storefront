@@ -633,7 +633,8 @@ html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e
 }
 @media (hover:none){[data-display] .quick{font-size:12px;padding:7px 4px;left:8px;right:8px;bottom:8px}}
 @media (prefers-reduced-motion:reduce){[data-display="spotlight"] .pr .pic,[data-display="hanger"] .pr:hover .pic{animation:none}}
-.dcrow{display:flex;gap:8px}.dcrow input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.08em}.dcrow .btn{padding:10px 20px;box-shadow:inset 0 0 0 2px currentColor}
+.dcrow{display:flex;gap:8px}.dcrow input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.08em}.dcrow .btn,.dcrow .btn.line{padding:10px 22px;background:var(--fg);color:var(--bg);box-shadow:none;flex:none}
+.dcrow .btn:disabled{opacity:.6}
 </style>
 </head>
 <body>
@@ -730,7 +731,7 @@ html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e
   <div class="field" id="co-zone-field"><label for="co-zone">Delivery location</label><select id="co-zone" onchange="onZoneChange()"></select></div>
   <div class="field" id="co-addr-field"><label for="co-address">Delivery address</label><input id="co-address" type="text" autocomplete="street-address" placeholder="e.g. 14 Allen Avenue, Ikeja, Lagos"></div>
   <div class="field" id="co-code-field"><label for="co-code">Discount code</label>
-    <div class="dcrow"><input id="co-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Have a code?" onkeydown="if(event.key==='Enter'){event.preventDefault();applyCode();}"><button class="btn line" id="co-code-btn" type="button" onclick="applyCode()">Apply</button></div>
+    <div class="dcrow"><input id="co-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Have a code?" onchange="applyCode()" onkeydown="if(event.key==='Enter'){event.preventDefault();applyCode();}"><button class="btn line" id="co-code-btn" type="button" onclick="applyCode()">Apply</button></div>
     <small id="co-code-msg"></small></div>
   <div class="err" id="co-error" style="display:none"></div>
   <div class="co">
@@ -1415,6 +1416,9 @@ async function placeOrder(){
   const errorEl = $('co-error');
   const fail = m => { errorEl.textContent = m; errorEl.style.display = 'block'; };
 
+  const typed = $('co-code').value.trim().toUpperCase();
+  if(typed && (!DISCOUNT || DISCOUNT.code !== typed)){ await applyCode(); if(!DISCOUNT) return fail($('co-code-msg').textContent || 'That discount code isn\'t valid — fix it or clear the box.'); }
+  if(!typed) DISCOUNT = null;
   if(!name || !phone) return fail('Name and phone number are required.');
   if(!email) return fail('Email is required so we can send you order updates.');
   if(deliveryMethod === 'delivery' && !address) return fail('Delivery address is required.');
