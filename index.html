@@ -633,6 +633,7 @@ html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e
 }
 @media (hover:none){[data-display] .quick{font-size:12px;padding:7px 4px;left:8px;right:8px;bottom:8px}}
 @media (prefers-reduced-motion:reduce){[data-display="spotlight"] .pr .pic,[data-display="hanger"] .pr:hover .pic{animation:none}}
+.dcrow{display:flex;gap:8px}.dcrow input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.08em}.dcrow .btn{padding:10px 20px;box-shadow:inset 0 0 0 2px currentColor}
 </style>
 </head>
 <body>
@@ -728,9 +729,13 @@ html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e
   <div class="field" id="co-email-field"><label for="co-email">Email</label><input id="co-email" type="email" autocomplete="email" placeholder="e.g. amaka@email.com"><small>We'll send order updates here, and occasional offers from this store (unsubscribe anytime).</small></div>
   <div class="field" id="co-zone-field"><label for="co-zone">Delivery location</label><select id="co-zone" onchange="onZoneChange()"></select></div>
   <div class="field" id="co-addr-field"><label for="co-address">Delivery address</label><input id="co-address" type="text" autocomplete="street-address" placeholder="e.g. 14 Allen Avenue, Ikeja, Lagos"></div>
+  <div class="field" id="co-code-field"><label for="co-code">Discount code</label>
+    <div class="dcrow"><input id="co-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Have a code?" onkeydown="if(event.key==='Enter'){event.preventDefault();applyCode();}"><button class="btn line" id="co-code-btn" type="button" onclick="applyCode()">Apply</button></div>
+    <small id="co-code-msg"></small></div>
   <div class="err" id="co-error" style="display:none"></div>
   <div class="co">
     <div><span>Subtotal</span><span id="co-subtotal">₦0</span></div>
+    <div id="co-discount-row" style="display:none;color:var(--brand-text);font-weight:700"><span id="co-discount-label">Discount</span><span id="co-discount">−₦0</span></div>
     <div id="co-delivery-fee-row"><span>Delivery fee</span><span id="co-delivery-fee">₦0</span></div>
     <div class="tot"><span>Total</span><span id="co-total">₦0</span></div>
   </div>
@@ -1344,8 +1349,37 @@ function currentDeliveryFee(){
   const zone = ALL_ZONES.find(z => String(z.id) === String(selectedZoneId));
   return zone ? zone.fee : 0;
 }
+// ---- discount codes: the server decides what a code is worth; the browser only shows it ----
+let DISCOUNT = null;   // { code, discount, label } once a code has been applied
+const CODE_FROM_URL = (function(){
+  try{
+    const c = (new URLSearchParams(location.search).get('code') || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,24);
+    const k = 'kooza_code_' + BUSINESS_ID;
+    if(c){ sessionStorage.setItem(k, c); return c; }
+    return sessionStorage.getItem(k) || '';
+  }catch(e){ return ''; }
+})();
+function discountAmount(){ return DISCOUNT ? Math.min(DISCOUNT.discount, cartSubtotal()) : 0; }
+function setCodeMsg(text, ok){ const m = $('co-code-msg'); m.textContent = text || ''; m.style.color = ok ? 'var(--brand-text)' : 'var(--red)'; m.style.fontWeight = ok ? '700' : '600'; }
+async function applyCode(silent){
+  const input = $('co-code'), code = input.value.trim().toUpperCase();
+  if(!code){ DISCOUNT = null; setCodeMsg(''); renderCheckoutTotals(); return; }
+  const btn = $('co-code-btn'); if(!silent){ btn.disabled = true; btn.textContent = '…'; }
+  try{
+    const res = await fetch(`${API_BASE}/api/public/${BUSINESS_ID}/discount/check`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, subtotal: cartSubtotal() })
+    });
+    const d = await res.json();
+    if(d.valid){ DISCOUNT = { code: d.code, discount: d.discount, label: d.label }; input.value = d.code; setCodeMsg(`${d.code} applied — ${d.label}`, true); }
+    else { DISCOUNT = null; setCodeMsg(silent ? '' : (d.message || 'That code isn\'t valid'), false); if(silent && d.message) setCodeMsg(d.message, false); }
+  }catch(e){ DISCOUNT = null; setCodeMsg('Could not check that code — try again.', false); }
+  finally{ btn.disabled = false; btn.textContent = 'Apply'; renderCheckoutTotals(); }
+}
 function renderCheckoutTotals(){
-  const subtotal = cartSubtotal(), fee = currentDeliveryFee(), total = subtotal + fee;
+  const subtotal = cartSubtotal(), fee = currentDeliveryFee(), off = discountAmount(), total = subtotal - off + fee;
+  $('co-discount-row').style.display = off > 0 ? 'flex' : 'none';
+  $('co-discount-label').textContent = DISCOUNT ? `Discount (${DISCOUNT.code})` : 'Discount';
+  $('co-discount').textContent = '−' + money(off);
   $('co-subtotal').textContent = money(subtotal);
   $('co-delivery-fee').textContent = money(fee);
   $('co-delivery-fee-row').style.display = deliveryMethod === 'delivery' ? 'flex' : 'none';
@@ -1366,6 +1400,9 @@ function openCheckout(){
     selectedZoneId = null;
   }
   setMethod(deliveryMethod);
+  // a code from the shop link (?code=) or one applied earlier: check it again against today's bag
+  if(!$('co-code').value && CODE_FROM_URL) $('co-code').value = CODE_FROM_URL;
+  if($('co-code').value){ applyCode(true); } else { DISCOUNT = null; setCodeMsg(''); }
   closeOverlay('cart');
   openOverlay('checkout');
 }
@@ -1396,6 +1433,7 @@ async function placeOrder(){
     deliveryZoneId: deliveryMethod === 'delivery' ? selectedZoneId : null,
     campaignId: CAMPAIGN_ID,
     source: SOURCE,
+    discountCode: DISCOUNT ? DISCOUNT.code : undefined,
   };
 
   try{
@@ -1415,7 +1453,7 @@ async function placeOrder(){
     });
     const order = await res.json();
     if(!res.ok) throw new Error(order.error || 'Could not place order');
-    cart = {};
+    cart = {}; DISCOUNT = null; $('co-code').value = ''; setCodeMsg('');
     refreshCartBadge();
     closeOverlay('checkout');
     showConfirmation(order);
@@ -1423,7 +1461,7 @@ async function placeOrder(){
   } catch(err){
     fail(err.message);
     btn.disabled = false;
-    btn.textContent = paymentsEnabled ? `Pay ${money(cartSubtotal() + currentDeliveryFee())}` : 'Place order';
+    btn.textContent = paymentsEnabled ? `Pay ${money(cartSubtotal() - discountAmount() + currentDeliveryFee())}` : 'Place order';
   }
 }
 
@@ -1431,6 +1469,7 @@ function showConfirmation(order){
   $('order-number').textContent = order.id;
   let html = order.items.map(i =>
     `<div><span>${i.qty}× ${esc(i.name)}${i.variantLabel ? ` (${esc(i.variantLabel)})` : ''}</span><span>${money(i.price * i.qty)}</span></div>`).join('');
+  if(order.discount > 0) html += `<div><span>Discount${order.discountCode ? ' (' + esc(order.discountCode) + ')' : ''}</span><span>−${money(order.discount)}</span></div>`;
   if(order.deliveryFee > 0) html += `<div><span>Delivery fee</span><span>${money(order.deliveryFee)}</span></div>`;
   $('confirm-items').innerHTML = html;
   $('cf-total').textContent = money(order.amount);
@@ -1488,6 +1527,7 @@ function toast(msg){
 (async function init(){
   renderCart();
   await Promise.all([loadStore(), loadProducts(), loadDeliveryZones()]);
+  if(CODE_FROM_URL) setTimeout(() => toast('Code ' + CODE_FROM_URL + ' will be applied at checkout'), 1200);
   renderAll();            // zones arrive in parallel — re-render so promo/perks/footer see them
   checkForPaymentReturn();
 })();
