@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Store</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Figtree:wght@400;500;600;700&family=Fraunces:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script>
+(function(){var D=['cinematic','minimal','editorial','bold','marketplace','social'],d=null;
+try{var q=new URLSearchParams(location.search),b=q.get('business')||q.get('b')||'';d=q.get('design')||localStorage.getItem('kooza_design_'+b)}catch(e){}
+if(D.indexOf(d)<0)d='cinematic';var h=document.documentElement;h.setAttribute('data-design',d);if(d!=='cinematic')h.setAttribute('data-calm','1')})();
+</script>
 <script>
 (function(){
   var saved = null;
@@ -644,6 +649,185 @@ html[data-mode="light"] #product-grid{--wood1:#c99a6b;--wood2:#8d5f3a;--wood3:#e
 [data-display="catalogue"] .offb{top:auto;bottom:8px}
 [data-display="lookbook"] .offb,[data-display="pinboard"] .offb{top:14px;left:14px}
 .stk s{display:block;font-size:10px;font-weight:600;opacity:.7;line-height:1.1;margin:2px 0 0;text-align:center;text-decoration-thickness:1.5px}
+/* ===================== STORE DESIGNS (html[data-design]) ===================== */
+/* shared calm reset for every non-cinematic design */
+html[data-calm] .fx,html[data-calm] .spot,html[data-calm] .cur,html[data-calm] .cine-bar,html[data-calm] .hbg,html[data-calm] .ticker,html[data-calm] .mq2,html[data-calm] .stk,html[data-calm] .fgiant,html[data-calm] .halo,html[data-calm] .ring,html[data-calm] .fl3,html[data-calm] .hd h2:before,html[data-calm] .hd h2:after{display:none!important}
+html[data-calm] body:before{display:none}
+html[data-calm] *{text-shadow:none!important}
+html[data-calm] .tilt,html[data-calm] .pr,html[data-calm] .cat,html[data-calm] .how>div{transform:none!important;rotate:none!important}
+html[data-calm] .rv{opacity:1!important;transform:none!important;translate:none!important;rotate:none!important}
+html[data-calm] .s[data-ghost]:before,html[data-calm] .s[data-ghost]:after{display:none}
+html[data-calm] .price.vh{visibility:visible!important;position:static!important;opacity:1!important}
+html[data-calm] .logo .mk{box-shadow:none}
+html[data-calm] nav a:after{display:none}
+html[data-calm] header{background:var(--bg);backdrop-filter:none;box-shadow:none}
+html[data-calm] .hero h1,html[data-calm] .hero h1 .wd{animation:none;perspective:none}
+html[data-calm] .hero{color:var(--fg);background:var(--bg)}
+html[data-calm] .hero .stage{perspective:none}
+html[data-calm] .hero .eyebrow{color:var(--muted)}
+html[data-calm] .hero .btn.pop{box-shadow:none}
+html[data-calm] .hero .btn.line{color:var(--fg);border-color:var(--fg)}
+html[data-calm] .hud{display:none}
+html[data-calm] .quick{opacity:1;transform:none}
+html[data-calm] .news,html[data-calm] .edit{box-shadow:none}
+html[data-calm] .how .n{color:var(--pop);-webkit-text-stroke:0;font-size:44px}
+html[data-calm] .how div:before{display:none}
+html[data-calm] .pr.tilt:hover .pic{box-shadow:none}
+html[data-calm] .cat:hover{box-shadow:none}
+html[data-calm] .stage .sl{transform:none;box-shadow:0 20px 50px -24px rgba(0,0,0,.4);animation:none}
+
+html[data-calm] .cat,html[data-calm] .edit,html[data-calm] .how>div,html[data-calm] .pic,html[data-calm] .news{box-shadow:none}
+html[data-calm] .stage{color:#fff}
+html[data-calm] .quick{position:absolute;top:auto;left:10px;right:10px;bottom:10px;padding:9px;font-size:13px}
+html[data-calm] .cat{min-height:200px}
+html[data-calm] .cat .art{opacity:.9}
+html[data-calm] .perks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+html[data-design="social"] .perks{grid-template-columns:minmax(0,1fr)}
+@media(max-width:760px){
+html[data-calm] header .bar{gap:10px;flex-wrap:nowrap;height:64px}
+html[data-calm] header nav,html[data-calm] header .search{display:none}
+html[data-calm] .logo .nm{max-width:150px}
+html[data-calm] .ib{white-space:nowrap;padding:0 12px}
+html[data-calm] .tools{gap:8px}
+}
+html[data-calm] .cat span{background:transparent;padding:0;color:var(--muted)}
+html[data-design="social"] .cat{overflow:visible}
+html[data-design="social"] .cat .art{overflow:hidden}
+/* ---- 2. CLEAN ---- */
+html[data-design="minimal"] .hero{background:var(--soft)}
+html[data-design="minimal"] .hero h1{font-weight:800;letter-spacing:-.04em;font-size:clamp(38px,5.4vw,72px)}
+html[data-design="minimal"] .hero .w{min-height:440px}
+html[data-design="minimal"] .pic{border-radius:10px;background:var(--soft)}
+html[data-design="minimal"] .btn{border-radius:8px}
+html[data-design="minimal"] .btn.pop{background:var(--fg);color:var(--bg)}
+html[data-design="minimal"] .tab{border-radius:8px}
+html[data-design="minimal"] .cat{border-radius:10px;border:1px solid var(--line);background:var(--card)!important;color:var(--fg)}
+html[data-design="minimal"] .cat h3,html[data-design="minimal"] .cat span{color:var(--fg)}
+html[data-design="minimal"] .edit,html[data-design="minimal"] .news,html[data-design="minimal"] .how>div{border-radius:12px;border:1px solid var(--line)}
+html[data-design="minimal"] .news{background:var(--soft);color:var(--fg)}
+html[data-design="minimal"] .hd h2{font-weight:700;font-size:26px;letter-spacing:-.02em}
+
+/* ---- 3. BOUTIQUE / EDITORIAL ---- */
+html[data-design="editorial"]{--d:'Fraunces',Georgia,serif}
+html[data-design="editorial"] h1,html[data-design="editorial"] h2,html[data-design="editorial"] h3,html[data-design="editorial"] .logo{font-family:'Fraunces',Georgia,serif;font-stretch:100%;letter-spacing:-.01em;font-weight:500}
+html[data-design="editorial"] header .bar{display:grid;grid-template-columns:1fr auto 1fr;height:84px}
+html[data-design="editorial"] .logo{grid-column:2;grid-row:1;justify-content:center;font-size:30px}
+html[data-design="editorial"] nav{grid-column:1;grid-row:1;text-transform:uppercase;letter-spacing:.14em;font-size:12px}
+html[data-design="editorial"] .tools{grid-column:3;grid-row:1;justify-self:end}
+html[data-design="editorial"] .search{display:none}
+html[data-design="editorial"] .hero{background:var(--soft);text-align:center}
+html[data-design="editorial"] .hero .w{grid-template-columns:minmax(0,1fr);min-height:0;padding-block:70px 56px}
+html[data-design="editorial"] .hero .stage{display:none}
+html[data-design="editorial"] .hero h1{font-size:clamp(44px,7vw,96px);font-weight:400;font-style:italic;line-height:1}
+html[data-design="editorial"] .hero p{margin-inline:auto}
+html[data-design="editorial"] .hero .cta{justify-content:center}
+html[data-design="editorial"] .eyebrow{letter-spacing:.3em;justify-content:center}
+html[data-design="editorial"] .btn{border-radius:0;letter-spacing:.12em;text-transform:uppercase;font-size:12px;padding:15px 30px}
+html[data-design="editorial"] .btn.pop{background:var(--fg);color:var(--bg)}
+html[data-design="editorial"] .pic{border-radius:0;aspect-ratio:3/4}
+html[data-design="editorial"] .meta{text-align:center;padding-top:14px}
+html[data-design="editorial"] .meta h3{font-size:19px}
+html[data-design="editorial"] .tab{border-radius:0;border:0;border-bottom:1px solid transparent;background:none;text-transform:uppercase;letter-spacing:.12em;font-size:12px}
+html[data-design="editorial"] .tab[aria-pressed="true"]{background:none;color:var(--fg);border-bottom-color:var(--fg)}
+html[data-design="editorial"] .hd{display:block;text-align:center}
+html[data-design="editorial"] .hd .tabs{justify-content:center;margin-top:14px}
+html[data-design="editorial"] .cat,html[data-design="editorial"] .edit,html[data-design="editorial"] .news,html[data-design="editorial"] .how>div,html[data-design="editorial"] .sort{border-radius:0}
+html[data-design="editorial"] .cat{border:1px solid var(--line);background:var(--card)!important;color:var(--fg)}
+html[data-design="editorial"] .cat h3,html[data-design="editorial"] .cat span{color:var(--fg)}
+html[data-design="editorial"] .news{background:var(--fg);color:var(--bg)}
+@media(max-width:760px){html[data-design="editorial"] header .bar{height:70px}html[data-design="editorial"] .logo{font-size:22px}html[data-design="editorial"] nav{display:none}html[data-design="editorial"] .logo{grid-column:1}html[data-design="editorial"] .tools{grid-column:2}html[data-design="editorial"] header .bar{grid-template-columns:1fr auto}}
+
+/* ---- 4. BOLD / STREETWEAR ---- */
+html[data-design="bold"]{--bd:3px solid var(--fg);--hs:6px 6px 0 var(--fg)}
+html[data-design="bold"] h1,html[data-design="bold"] h2,html[data-design="bold"] h3{text-transform:uppercase;letter-spacing:-.02em}
+html[data-design="bold"] header{border-bottom:var(--bd)}
+html[data-design="bold"] .hero{background:var(--pop);color:var(--on-pop);border-bottom:var(--bd)}
+html[data-design="bold"] .hero h1{font-size:clamp(38px,6vw,88px);line-height:.9;font-weight:900;overflow-wrap:break-word}
+html[data-design="bold"] .hero .w{min-height:420px}
+html[data-design="bold"] .hero .eyebrow,html[data-design="bold"] .hero p{color:var(--on-pop)}
+html[data-design="bold"] .hero .btn,html[data-design="bold"] .btn{border-radius:0;border:var(--bd);box-shadow:var(--hs);text-transform:uppercase;font-weight:900}
+html[data-design="bold"] .hero .btn.pop{background:var(--fg);color:var(--bg)}
+html[data-design="bold"] .hero .btn.line{background:var(--bg);color:var(--fg)}
+html[data-design="bold"] .pic{border-radius:0;border:var(--bd);box-shadow:var(--hs)}
+html[data-design="bold"] .pr{transition:translate .15s}
+html[data-design="bold"] .pr:hover{translate:-3px -3px}
+html[data-design="bold"] .pr:hover .pic{box-shadow:9px 9px 0 var(--fg)}
+html[data-design="bold"] .meta h3{font-size:16px}
+html[data-design="bold"] .price{font-weight:900}
+html[data-design="bold"] .tab,html[data-design="bold"] .sort,html[data-design="bold"] .search{border-radius:0;border:2px solid var(--fg);text-transform:uppercase;font-weight:800}
+html[data-design="bold"] .tab[aria-pressed="true"]{background:var(--pop);color:var(--on-pop)}
+html[data-design="bold"] .cat,html[data-design="bold"] .edit,html[data-design="bold"] .news,html[data-design="bold"] .how>div{border-radius:0;border:var(--bd);box-shadow:var(--hs)}
+html[data-design="bold"] .ib{border-radius:0;border:2px solid var(--fg)}
+html[data-design="bold"] .ticker{display:block!important;background:var(--fg);color:var(--bg);border-block:var(--bd)}
+html[data-design="bold"] .stage .sl{border-radius:0;border:var(--bd);box-shadow:var(--hs)}
+html[data-design="bold"] .hd h2{font-size:clamp(28px,4vw,48px);font-weight:900;background:var(--pop);color:var(--on-pop);display:inline-block;padding:2px 12px;border:var(--bd)}
+
+/* ---- 5. MARKETPLACE ---- */
+html[data-design="marketplace"] .hero .w{min-height:0;padding-block:22px;gap:24px}
+html[data-design="marketplace"] .hero{background:color-mix(in srgb,var(--brand) 14%,var(--bg))}
+html[data-design="marketplace"] .hero h1{font-size:clamp(26px,3.4vw,44px);line-height:1.05}
+html[data-design="marketplace"] .hero p{font-size:15px;margin:10px 0 16px}
+html[data-design="marketplace"] .stage{display:none}
+html[data-design="marketplace"] .hero .w{grid-template-columns:minmax(0,1fr)}
+html[data-design="marketplace"] nav{display:none}
+html[data-design="marketplace"] .ib{white-space:nowrap}
+html[data-design="marketplace"] .logo .nm{max-width:200px}
+html[data-design="marketplace"] .search{width:min(420px,38vw);border-radius:8px;border-color:var(--line);background:var(--card)}
+html[data-design="marketplace"] header .bar{gap:18px}
+html[data-design="marketplace"] header .tools{flex:1;justify-content:flex-end}
+html[data-design="marketplace"] .btn,html[data-design="marketplace"] .ib,html[data-design="marketplace"] .sort,html[data-design="marketplace"] .tab{border-radius:8px}
+html[data-design="marketplace"] .pic{border-radius:8px;aspect-ratio:1}
+html[data-design="marketplace"] .pr{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px}
+html[data-design="marketplace"] .meta h3{font-size:14px;font-weight:600}
+html[data-design="marketplace"] .meta{padding:8px 2px 4px}
+html[data-design="marketplace"] #cats{display:none!important}
+html[data-design="marketplace"] #chip-row{display:none}
+html[data-design="marketplace"] #shop{display:grid;grid-template-columns:230px minmax(0,1fr);gap:0 28px;align-items:start}
+html[data-design="marketplace"] #shop>.hd{grid-column:1/-1}
+html[data-design="marketplace"] #product-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+html[data-design="marketplace"] #side{display:block}
+#side{display:none;position:sticky;top:88px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:14px}
+#side h4{font:800 13px var(--b);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 8px}
+#side button{display:flex;justify-content:space-between;width:100%;background:none;border:0;padding:9px 10px;border-radius:7px;text-align:left;cursor:pointer;font-weight:600;font-size:14px}
+#side button:hover{background:var(--soft)}
+#side button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+#side button span{opacity:.6;font-weight:500}
+@media(max-width:980px){html[data-design="marketplace"] #shop{grid-template-columns:minmax(0,1fr)}html[data-design="marketplace"] #side{display:none}html[data-design="marketplace"] #chip-row{display:flex}html[data-design="marketplace"] #product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}html[data-design="marketplace"] .stage{display:none}}
+
+/* ---- 6. LINK-IN-BIO / SOCIAL ---- */
+html[data-design="social"] body{background:color-mix(in srgb,var(--brand) 10%,var(--soft))}
+html[data-design="social"] main,html[data-design="social"] footer>.w,html[data-design="social"] header .bar{max-width:600px}
+html[data-design="social"] main{margin:0 auto;background:var(--bg);box-shadow:0 0 0 1px var(--line);min-height:100vh}
+html[data-design="social"] .w{padding-inline:16px}
+html[data-design="social"] nav,html[data-design="social"] .search{display:none}
+html[data-design="social"] header{background:var(--bg)}
+html[data-design="social"] .hero{background:var(--bg);text-align:center}
+html[data-design="social"] .hero .w{grid-template-columns:minmax(0,1fr);min-height:0;padding-block:30px 12px}
+html[data-design="social"] .stage{display:none}
+html[data-design="social"] .hero h1{font-size:clamp(30px,8vw,40px);line-height:1.05}
+html[data-design="social"] .hero p{margin:10px auto 18px;font-size:15px}
+html[data-design="social"] .hero .cta{justify-content:center}
+html[data-design="social"] .eyebrow{justify-content:center}
+html[data-design="social"] .hero .w:before{content:"";display:block;width:92px;height:92px;border-radius:50%;margin:0 auto 14px;background:var(--brand) var(--avatar,none) center/cover;border:3px solid var(--bg);box-shadow:0 0 0 3px var(--pop)}
+html[data-design="social"] .btn{border-radius:14px;padding:14px 22px}
+html[data-design="social"] .hero .cta .btn{flex:1 1 100%}
+html[data-design="social"] .cats{display:flex;gap:16px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
+html[data-design="social"] .cat{flex:0 0 auto;width:78px;min-height:0;height:auto;aspect-ratio:1;border-radius:50%;padding:0;border:3px solid var(--pop);background:var(--card)!important;position:relative;overflow:hidden;box-shadow:none}
+html[data-design="social"] .cat h3{position:absolute;left:0;right:0;bottom:-30px;font-size:12px;color:var(--fg);text-align:center}
+html[data-design="social"] .cat span{display:none}
+html[data-design="social"] .cat .art{position:absolute;inset:0;width:100%;height:100%;margin:0;border-radius:50%}
+html[data-design="social"] .cat .art img{width:100%;height:100%;object-fit:cover}
+html[data-design="social"] #cats{padding-bottom:36px}
+html[data-design="social"] #product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+html[data-design="social"] .pic{border-radius:14px}
+html[data-design="social"] .meta h3{font-size:14px}
+html[data-design="social"] .hd{display:block}
+html[data-design="social"] .hd h2{font-size:20px}
+html[data-design="social"] .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+html[data-design="social"] .edit,html[data-design="social"] .news,html[data-design="social"] .how>div{border-radius:16px}
+html[data-design="social"] .edit,html[data-design="social"] .how{grid-template-columns:minmax(0,1fr)}
+html[data-design="social"] .news{padding:26px}
+html[data-design="social"] footer .fg{grid-template-columns:minmax(0,1fr)}
 </style>
 </head>
 <body>
@@ -987,6 +1171,7 @@ async function loadStore(){
     if(!res.ok) throw new Error();
     STORE = await res.json();
     applyTheme(STORE.theme);
+    applyDesign();
     paymentsEnabled = !!STORE.paymentsEnabled;
 
     const name = STORE.name || 'Store';
@@ -1118,6 +1303,7 @@ function renderChips(){
   $('chip-row').innerHTML = cats.map(c =>
     `<button class="tab" aria-pressed="${c===activeCategory}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
   $('chip-row').querySelectorAll('.tab').forEach(el => el.onclick = () => filterCategory(el.dataset.cat));
+  if(typeof renderSide === 'function') renderSide();
 }
 function filterCategory(cat){
   activeCategory = cat;
@@ -1576,7 +1762,8 @@ function toast(msg){
 /* ===================== 3D CINEMATIC LAYER (behaviour) ===================== */
 const CINE = { reel: [], idx: 0, timer: null,
   fine: window.matchMedia('(hover:hover) and (pointer:fine)').matches,
-  calm: window.matchMedia('(prefers-reduced-motion:reduce)').matches };
+  reduced: window.matchMedia('(prefers-reduced-motion:reduce)').matches,
+  get calm(){ return this.reduced || document.documentElement.hasAttribute('data-calm'); } };
 
 function reelGo(i){
   if(!CINE.reel.length) return;
@@ -1795,6 +1982,32 @@ const DISPLAY_STYLES = ['grid','shelf','hanger','spotlight','pinboard','lookbook
 function currentDisplay(){
   let d = new URLSearchParams(location.search).get('display') || STORE.displayStyle || 'grid';
   return DISPLAY_STYLES.includes(d) ? d : 'grid';
+}
+/* ---- store design (merchant picks it in Store settings; ?design=editorial previews one) ---- */
+const DESIGN_STYLES = ['cinematic','minimal','editorial','bold','marketplace','social'];
+function currentDesign(){
+  let d = new URLSearchParams(location.search).get('design') || STORE.designStyle || null;
+  if(!d){ try{ d = localStorage.getItem('kooza_design_' + BUSINESS_ID); }catch(e){} }
+  return DESIGN_STYLES.includes(d) ? d : 'cinematic';
+}
+function applyDesign(){
+  const d = currentDesign(), h = document.documentElement;
+  h.setAttribute('data-design', d);
+  if(d === 'cinematic') h.removeAttribute('data-calm'); else h.setAttribute('data-calm', '1');
+  if(STORE.designStyle && !new URLSearchParams(location.search).get('design')){ try{ localStorage.setItem('kooza_design_' + BUSINESS_ID, STORE.designStyle); }catch(e){} }
+  const logo = STORE.logoUrl || STORE.logo || '';
+  h.style.setProperty('--avatar', logo ? `url("${String(logo).replace(/["\\\n]/g,'')}")` : 'none');
+  if(typeof renderSide === 'function') renderSide();
+  if(d === 'cinematic'){ clearInterval(CINE.timer); if(typeof reelStart === 'function') reelStart(); } else clearInterval(CINE.timer);
+}
+function renderSide(){
+  let side = $('side');
+  if(currentDesign() !== 'marketplace'){ if(side) side.remove(); return; }
+  if(!side){ side = document.createElement('aside'); side.id = 'side'; side.setAttribute('aria-label','Categories'); $('shop').insertBefore(side, $('product-grid')); }
+  const cats = {}; ALL_PRODUCTS.forEach(p => { const c = p.category || 'Other'; cats[c] = (cats[c] || 0) + 1; });
+  const row = (name, label, n) => `<button data-sc="${esc(name)}" aria-pressed="${activeCategory === name}">${esc(label)}<span>${n}</span></button>`;
+  side.innerHTML = '<h4>Categories</h4>' + row('All', 'All products', ALL_PRODUCTS.length) + Object.keys(cats).map(c => row(c, c, cats[c])).join('');
+  side.onclick = e => { const b = e.target.closest('button[data-sc]'); if(b) filterCategory(b.dataset.sc); };
 }
 function applyDisplay(){
   const g = $('product-grid'), d = currentDisplay();
