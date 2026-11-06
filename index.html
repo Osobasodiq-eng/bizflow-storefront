@@ -7,8 +7,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Figtree:wght@400;500;600;700&family=Fraunces:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <script>
+/* Store address: on a merchant's own address (kicksmith.<platform domain> or their own domain) there is no ?business=,
+   so ask the API which store this hostname belongs to. Result is cached for 10 minutes per browser. */
+(function(){try{
+  var q=new URLSearchParams(location.search);if(q.get('business'))return;
+  var h=location.hostname.toLowerCase();
+  if(!h||location.protocol==='file:'||/^(localhost|127\.|0\.0\.0\.0|\[)/.test(h)||h==='bizflow-storefront.onrender.com')return;
+  var key='kooza_host_'+h,hit=null;try{hit=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+  if(hit&&hit.id&&Date.now()-hit.t<6e5){window.__BID=String(hit.id);return}
+  var x=new XMLHttpRequest();x.open('GET','https://bizflow-api-v0sd.onrender.com/api/public/resolve?host='+encodeURIComponent(h),false);x.send();
+  if(x.status===200){var id=JSON.parse(x.responseText).businessId;if(id){window.__BID=String(id);try{localStorage.setItem(key,JSON.stringify({id:id,t:Date.now()}))}catch(e){}}}
+}catch(e){}})();
+</script>
+<script>
 (function(){var D=['cinematic','minimal','editorial','bold','marketplace','social'],d=null;
-try{var q=new URLSearchParams(location.search),b=q.get('business')||q.get('b')||'';d=q.get('design')||localStorage.getItem('kooza_design_'+b)}catch(e){}
+try{var q=new URLSearchParams(location.search),b=q.get('business')||q.get('b')||window.__BID||'';d=q.get('design')||localStorage.getItem('kooza_design_'+b)}catch(e){}
 var L=['glass','neon','luxe','pastel','vintage','mono'],l=null;try{l=q.get('look')||localStorage.getItem('kooza_look_'+b)}catch(e){}
 if(L.indexOf(l)>=0)document.documentElement.setAttribute('data-look',l);
 if(D.indexOf(d)<0)d='cinematic';var h=document.documentElement;h.setAttribute('data-design',d);if(d!=='cinematic')h.setAttribute('data-calm','1')})();
@@ -1062,7 +1075,7 @@ html[data-look="mono"] dialog{background:#fff;border:1.5px solid #111}
 
 <script>
 const API_BASE = 'https://bizflow-api-v0sd.onrender.com';
-const BUSINESS_ID = new URLSearchParams(window.location.search).get('business');
+const BUSINESS_ID = new URLSearchParams(window.location.search).get('business') || window.__BID || null;
 // Marketing attribution: a "Shop now" link in a campaign email carries ?c=<campaign id>.
 // Remembered for this visit so the order is credited to that campaign at checkout.
 const CAMPAIGN_ID = (function(){
@@ -1086,7 +1099,7 @@ const SOURCE = (function(){
 if(!BUSINESS_ID){
   document.body.innerHTML = `<div style="max-width:420px; margin:80px auto; text-align:center; font-family:sans-serif; padding:0 20px;">
     <h2>No store selected</h2>
-    <p style="color:#5C6960;">This link is missing a store ID. Ask the seller for their storefront link.</p>
+    <p style="color:#5C6960;">We couldn't find a store at this address. Check the link, or ask the seller for their storefront link.</p>
   </div>`;
   throw new Error('No business ID in URL — stopping storefront script.');
 }
