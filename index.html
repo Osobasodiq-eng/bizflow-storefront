@@ -1075,7 +1075,8 @@ html[data-look="mono"] dialog{background:#fff;border:1.5px solid #111}
 
 <script>
 const API_BASE = 'https://bizflow-api-v0sd.onrender.com';
-const BUSINESS_ID = new URLSearchParams(window.location.search).get('business') || window.__BID || null;
+// tolerate a mangled link such as ?business=5/?business=5 (take the leading digits / slug only)
+const BUSINESS_ID = (function(){ var v = new URLSearchParams(window.location.search).get('business') || window.__BID || ''; var m = String(v).match(/^[A-Za-z0-9_-]+/); return m ? m[0] : null; })();
 // Marketing attribution: a "Shop now" link in a campaign email carries ?c=<campaign id>.
 // Remembered for this visit so the order is credited to that campaign at checkout.
 const CAMPAIGN_ID = (function(){
